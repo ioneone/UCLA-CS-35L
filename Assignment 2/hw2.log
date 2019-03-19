@@ -1,0 +1,432 @@
+Warning: it will be difficult to do this homework without attending the lab session for hints.
+
+You're working in a project that has lots of text files. Some of them are in plain ASCII; others are in UTF-8, which is a superset of ASCII. None of the files are supposed to contain NUL bytes (all bits zero). The UTF-8 files that contain non-ASCII characters are supposed to have a first line containing the string "-*- coding: utf-8 -*-" (without the quotation marks).
+
+POSIX systems typically support various locales to let applications operate well in various countries, languages, and character encodings. The shell command locale -a outputs all the locales available on your system, and should list among others the C, es_MX.utf8, and ja_JP.utf8 locales. 
+
+	Command:
+		locale -a
+
+	Output:
+		aa_DJ
+		aa_DJ.iso88591
+		aa_DJ.utf8
+		aa_ER
+		aa_ER@saaho
+		...
+
+You can select a locale by setting the LC_ALL environment variable with a shell command like the following:
+
+export LC_ALL=en_US.utf8
+
+This setting takes effect for all programs later invoked. 
+
+	Command:
+		export LC_ALL=en_US.utf8
+		
+
+You can see your current locale settings by running the locale command without any arguments. 
+
+	Command:
+		locale
+
+	Output:
+		LANG=en_US.UTF-8
+		LC_CTYPE="en_US.utf8"
+		LC_NUMERIC="en_US.utf8"
+		LC_TIME="en_US.utf8"
+		LC_COLLATE="en_US.utf8"
+		LC_MONETARY="en_US.utf8"
+		...
+
+You can see how the locale affects the output of some standard utilities by running the date and ls -l commands, using the above mentioned locales.
+
+	Command:
+		date
+
+	Output:
+		Tue Jan 15 15:20:31 PST 2019
+
+	Note:
+		using LC_ALL=en_US.utf8
+
+	Command:
+		export LC_ALL=ja_JP.utf8
+		date
+
+	Output:
+		2019年  1月 15日 火曜日 15:22:09 PST
+		
+Associated with each locale is a character encoding that specifies how characters in that locale are represented as bytes. In the C locale on GNU/Linux systems, each character represents a single byte using the ASCII encoding for bytes whose values are in the range 0–127; bytes outside of that range do not represent any characters, and are considered to be encoding errors. The en_US.utf8 locale is like the C locale, except that some (but not all) short sequences of bytes in the range 128–255 represent non-ASCII characters; bytes that are not in such a sequence are considered to be encoding errors.
+
+	Note:
+		A null byte is a byte with the value zero, i.e. 0x00 in hex.
+		A byte can represent a value between 0 and 255, i.e. 0x00 - 0xFF.
+
+		Single character of ASCII is in the range of 0-127 (1 byte), 
+		i.e. 0x00 - 0x7F.
+
+		ASCII defines 128 characters, which map to the numbers 0–127.
+		Unicode defines 2^21 characters.
+		Unicode is a superset of ASCII.
+
+		Because Unicode characters don't generally fit into one 8-bit byte, 
+		there are numerous ways of storing Unicode characters in byte sequences,
+		such as UTF-32 and UTF-8.
+
+		UTF-8 is a variable length encoding with a minimum of 
+		8 bits per character. Unicode character set uses
+		one to four 8-bit bytes.
+
+		\xHH   the eight-bit character whose value 
+		is the hexadecimal value HH (one or two hex digits)
+
+		\uHHHH the Unicode (ISO/IEC 10646) character 
+		whose value is the hexadecimal value HHHH (one to four hex digits)
+
+		\UHHHHHHHH the Unicode (ISO/IEC 10646) character 
+		whose value is the hexadecimal value HHHHHHHH (one to eight hex digits)
+
+		A null byte can be typed as "\0"
+
+		echo -e
+		The -e option enables interpretation of backslash escapes
+
+		ASCII character file can be created by randomly typing words
+		in the file.
+
+		UTF-8 character file can be created by including some Chinese
+		or Japanese words in the file.
+
+		A file that contains NUL bytes can be created by having "\0"
+		somewhere in the file.
+
+		find -exec command {} +
+		This variant of the -exec action runs the specified 
+		command on the selected files
+
+		grep --binary-files=TYPE
+		If TYPE=binary, grep will output special message for matches found
+		in binary files. By default, TYPE=binary. If TYPE=text, grep will
+		treat binary files as text files. A text file contains a null byte
+		is an example of binary file.
+		It will not print special message when there is no match.
+
+		grep -P
+		-P option enables Perl Compatible Regular Expressions.
+		This option is experimental
+
+		find . -exec grep -P --binary-files=binary "[\x00-\x7F]" {} +
+		The command above will run
+			grep -P --binary-files=binary "[\x00-\x7F]"
+		on the contents of all the files in current directory and
+		subdirectories. The regex [\x00-\x7F] is detecting any
+		character byte in the range of 0-127.
+
+		sed can be used for pattern matching
+		ex) sed -n "/pattern/p"
+
+		grep -L --files-without-match
+
+		head -n [number] FILENAME 
+		The command above will show first [number] lines of the file
+		
+
+
+Write a shell script  that accepts one or more arguments, and outputs a line for each argument that names an ASCII text file (i.e., an ASCII file containing no NUL bytes). If an argument names a directory, your script should recursively look at all files under that directory or its subdirectories.
+
+	Command:
+		emacs find-ascii-text.sh
+
+#! /bin/bash
+
+# split the argument based on new line in for loop
+OIFS="$IFS"
+IFS=$'\n'
+
+directory_to_files() {
+    for input in $@
+    do
+
+	if [ -d $input ]; then
+	    
+	    files=$( find $input -type f )
+	    echo "$files"
+	    
+	else
+	    
+	    # check if the file is in current directory
+	    # If it is, append "./" in front of it
+	    # This also deals with filename with leading special character
+            if [ ${input:0:1} != '.' ]; then
+                echo ./$input
+            else
+                echo $input
+            fi
+	    
+	fi
+	
+    done
+}
+
+exclude_null_byte_files() {
+    for input in $@
+    do
+
+	# number of lines that contain null byte characters                        
+        num_lines=$( sed -n "/\x00/p" $input | wc -l )
+
+        # echo the filename if there is no null byte characters
+	# and file is not empty
+	if ([ $num_lines -eq 0 ] && [ -s "$input" ]); then
+	    echo "$input"
+        fi
+	
+    done
+}
+
+files=$( directory_to_files $@ )
+
+files=$( exclude_null_byte_files "$files" )
+
+# exclude duplicate files and sort them
+files=$( echo "$files" | sort -u )
+
+# find ascii files
+files=$( find $files -exec grep -PL "[^\x00-\x7F]" {} + )
+
+echo "$files"
+		
+
+Write a similar shell script find-utf-8-text that works like find-ascii-text, except that it outputs a line only for UTF-8 text files (i.e., UTF-8 files containing no NUL bytes) that are not ASCII text files.
+
+	Command:
+		emacs find-utf-8-text.sh
+
+#! /bin/bash
+
+# split the argument based on new line in for loop
+OIFS="$IFS"
+IFS=$'\n'
+
+directory_to_files() {
+    for input in $@
+    do
+
+	if [ -d $input ]; then
+	    
+	    files=$( find $input -type f )
+	    echo "$files"
+	    
+	else
+	    
+	    # check if the file is in current directory
+	    # If it is, append "./" in front of it
+	    # This also deals with filename with leading special character
+            if [ ${input:0:1} != '.' ]; then
+                echo ./$input
+            else
+                echo $input
+            fi
+	    
+	fi
+	
+    done
+}
+
+exclude_null_byte_files() {
+    for input in $@
+    do
+
+	# number of lines that contain null byte characters                        
+        num_lines=$( sed -n "/\x00/p" $input | wc -l )
+
+        # echo the filename if there is no null byte characters
+	# and file is not empty
+	if ([ $num_lines -eq 0 ] && [ -s "$input" ]); then
+	    echo "$input"
+        fi
+	
+    done
+}
+
+files=$( directory_to_files $@ )
+
+files=$( exclude_null_byte_files "$files" )
+
+# exclude duplicate files and sort them
+files=$( echo "$files" | sort -u )
+
+# find utf-8 files
+files=$( find $files -exec grep -Pl "[^\x00-\x7F]" {} + )
+
+echo "$files"
+
+
+Write a shell script find-missing-utf-8-header that accepts one or more arguments, and outputs a line for each argument naming a UTF-8 text file that lacks the "-*- coding: utf-8 -*-" string in the first line. If an argument names a directory, the command should search the directory recursively.
+
+	Command:
+		emacs find-missing-utf-8-header.sh
+
+#! /bin/bash
+
+# split the argument based on new line in for loop
+OIFS="$IFS"
+IFS=$'\n'
+
+directory_to_files() {
+    for input in $@
+    do
+
+	if [ -d $input ]; then
+	    
+	    files=$( find $input -type f )
+	    echo "$files"
+	    
+	else
+	    
+	    # check if the file is in current directory
+	    # If it is, append "./" in front of it
+	    # This also deals with filename with leading special character
+            if [ ${input:0:1} != '.' ]; then
+                echo ./$input
+            else
+                echo $input
+            fi
+	    
+	fi
+	
+    done
+}
+
+exclude_null_byte_files() {
+    for input in $@
+    do
+
+	# number of lines that contain null byte characters                        
+        num_lines=$( sed -n "/\x00/p" $input | wc -l )
+
+        # echo the filename if there is no null byte characters
+	# and file is not empty
+	if ([ $num_lines -eq 0 ] && [ -s "$input" ]); then
+	    echo "$input"
+        fi
+	
+    done
+}
+
+select_files_with_missing_utf_8_header() {
+    for file in $@
+    do
+
+	first_line=$( cat $file | head -1 )
+
+	if [ "$first_line" != "-*- coding: utf-8 -*-" ]; then
+	    echo $file
+	fi
+
+    done
+}
+
+files=$( directory_to_files $@ )
+
+files=$( exclude_null_byte_files "$files" )
+
+# exclude duplicate files and sort them
+files=$( echo "$files" | sort -u )
+
+# find utf-8 files
+files=$( find $files -exec grep -Pl "[^\x00-\x7F]" {} + )
+
+files=$( select_files_with_missing_utf_8_header "$files" )
+
+echo "$files"
+
+
+Write a shell script find-extra-utf-8-header that is like find-missing-utf-8-header except it outputs a line for each ASCII text file that has the "-*- coding: utf-8 -*-" string in the first line.
+
+	Command:
+		emacs find-extra-utf-8-header.sh
+
+
+#! /bin/bash
+
+# split the argument based on new line in for loop
+OIFS="$IFS"
+IFS=$'\n'
+
+directory_to_files() {
+    for input in $@
+    do
+
+	if [ -d $input ]; then
+	    
+	    files=$( find $input -type f )
+	    echo "$files"
+	    
+	else
+	    
+	    # check if the file is in current directory
+	    # If it is, append "./" in front of it
+	    # This also deals with filename with leading special character
+            if [ ${input:0:1} != '.' ]; then
+                echo ./$input
+            else
+                echo $input
+            fi
+	    
+	fi
+	
+    done
+}
+
+exclude_null_byte_files() {
+    for input in $@
+    do
+
+	# number of lines that contain null byte characters                        
+        num_lines=$( sed -n "/\x00/p" $input | wc -l )
+
+        # echo the filename if there is no null byte characters
+	# and file is not empty
+	if ([ $num_lines -eq 0 ] && [ -s "$input" ]); then
+	    echo "$input"
+        fi
+	
+    done
+}
+
+select_files_with_extra_utf_8_header() {
+    for file in $@
+    do
+
+	first_line=$( cat $file | head -1 )
+
+	if [ "$first_line" == "-*- coding: utf-8 -*-" ]; then
+	    echo $file
+	fi
+
+    done
+}
+
+files=$( directory_to_files $@ )
+
+files=$( exclude_null_byte_files "$files" )
+
+# exclude duplicate files and sort them
+files=$( echo "$files" | sort -u )
+
+# find ascii files
+files=$( find $files -exec grep -PL "[^\x00-\x7F]" {} + )
+
+files=$( select_files_with_extra_utf_8_header "$files" )
+
+echo "$files"
+
+
+You need not worry about the cases where your scripts are given no arguments. However, be prepared to handle files whose names contain special characters like spaces, "*", and leading "–". You need not worry about file names containing newlines.
+
+Your script should be runnable as an ordinary user, and should be portable to any system that supports GNU grep along with the other standard POSIX shell and utilities; please see its list of utilities for the commands that your script may use. (Hint: see the find, head and tr utilities.) With GNU grep, the pattern . (period) matches only individual characters in the current locale; it does not match encoding errors. GNU grep has special treatment of files with encoding errors, or files containing NUL characters; see its --binary-files option. You may also want to look at GNU grep's -H, -m, -n, -l, -L, and -v options.
+
+When testing your script, it is a good idea to do the testing in a subdirectory devoted just to testing. This will reduce the likelihood of messing up your home directory or main development directory if your script goes haywire.
+

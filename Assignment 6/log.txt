@@ -1,0 +1,107 @@
+1. Investigate how well the multithreaded sort works, by measuring its performance.
+
+Command:
+	sort --version
+
+Output:
+	sort (GNU coreutils) 8.30
+	Copyright (C) 2018 Free Software Foundation, Inc.
+	License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/	gpl.html>.
+	This is free software: you are free to change and redistribute it.
+	There is NO WARRANTY, to the extent permitted by law.
+
+	Written by Mike Haertel and Paul Eggert.
+
+Command:
+	od -An -t fF -N $(((2**24)*4)) < /dev/urandom | 
+	tr -s ' ' '\n' | 
+	sed '1d' > randomfloat.txt
+
+Note:
+	od - dump files in octal and other formats
+
+	od -A RADIX
+	output format for file offsets; 
+	RADIX is one of [doxn], for Decimal, Octal, Hex or None
+
+	od -t TYPE
+	select output format or formats
+	fF to choose float
+
+	od -N SIZE
+	limit dump to BYTES input bytes
+
+	$((EXPRESSION)) to perform arithmetics
+
+	tr -s
+	replace each sequence of a repeated character that  is  listed  in  the
+	last specified SET, with a single occurrence of that character
+
+	sed '1d'
+	delete first line
+
+	*4 because floats are represented by 4 bytes
+
+Command:
+	time -p sort -g randomfloat.txt > /dev/null
+
+Output:
+	real 37.35
+	user 205.70
+	sys 1.20
+	
+Note:
+	time -p
+	chop off the floating point seconds.
+	
+	sort -g
+	compare according to general numerical value
+	General numeric sort compares the numbers as floats, 
+	this allows scientific notation,
+	but is slower and subject to rounding error
+
+	Redirect to /dev/null to to dispose unwanted output
+
+Command:
+	time -p sort -g --parallel=1 randomfloat.txt > /dev/null
+	
+Output:
+	real 180.70
+	user 180.34
+	sys 0.34
+
+Note:
+	sort --parallel=N
+	Set the number of sorts run in parallel to N.  By default, N is set
+     	to the number of available processors, but limited to 8, as there
+     	are diminishing performance gains after that.
+	
+	run sort in N threads
+
+Command:
+	time -p sort -g --parallel=2 randomfloat.txt > /dev/null
+
+Output:
+	real 102.31
+	user 193.61
+	sys 0.66
+
+Command:
+	time -p sort -g --parallel=4 randomfloat.txt > /dev/null
+
+Output:
+	real 57.37
+	user 196.42
+	sys 0.69
+
+Command:
+	time -p sort -g --parallel=8 randomfloat.txt > /dev/null
+
+Output:
+	real 38.00
+	user 203.52
+	sys 1.54
+
+Note:
+	The more threads I use, the faster it sorts the numbers.
+

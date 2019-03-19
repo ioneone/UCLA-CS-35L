@@ -1,0 +1,310 @@
+1. Install coreutils-with-bug
+
+	Command:
+		wget https://web.cs.ucla.edu/classes/winter19/cs35L/assign/coreutils-with-bug.tar.gz
+
+	Note:
+		download coreutils-with-bug.tar.gz
+
+	Command:
+		tar -xzf coreutils-with-bug.tar.gz
+
+	Note:
+		unzip .tar.gz file
+
+	Command:
+		mkdir coreutilsWithBugInstall
+		cd coreutilsWithBugInstall
+		pwd
+	
+	Output:
+		/u/cs/ugrad/junhong/coreutilsWithBugInstall
+
+	Note:
+		check the absolute path of coreutilsWithBugInstall
+
+	Command:
+		cd ..
+		cd coreutils-with-bug/
+		./configure --prefix=/u/cs/ugrad/junhong/coreutilsWithBugInstall CFLAG='-g'
+		make 
+	
+	Output:
+		In file included from utimecmp.c:41:
+		utimens.h:2:5: error: conflicting types for 'futimens'
+		 int futimens (int, char const *, struct timespec const [2]);
+		     ^~~~~~~~
+		In file included from utimecmp.h:25,
+                 from utimecmp.c:25:
+		/usr/include/sys/stat.h:373:12: note: previous declaration of 'futimens' 
+		was here
+		 extern int futimens (int __fd, const struct timespec __times[2]) 
+		__THROW;    ^~~~~~~~
+            	
+		make[3]: *** [Makefile:659: utimecmp.o] Error 1
+		make[3]: Leaving directory '/w/home.23/cs/ugrad/junhong/coreutils-with-
+		bug/lib'
+		make[2]: *** [Makefile:414: all] Error 2
+		make[2]: Leaving directory '/w/home.23/cs/ugrad/junhong/coreutils-with-
+		bug/lib'
+		make[1]: *** [Makefile:419: all-recursive] Error 1
+		make[1]: Leaving directory '/w/home.23/cs/ugrad/junhong/coreutils-with-
+		bug'
+		make: *** [Makefile:357: all] Error 2
+
+	What problems did you have when building it as-is:
+		Build Error occurred
+
+	Command:
+		wget https://web.cs.ucla.edu/classes/winter19/cs35L/assign/coreutils.diff
+
+	Note:
+		wget the patch file in coreutils-with-bug directory
+
+	Command:
+		patch -p0 < coreutils.diff 
+
+	Output:
+		patching file lib/utimens.c
+		patching file lib/utimens.h
+		patching file src/copy.c
+		patching file src/tee.c
+		patching file src/touch.c
+		
+	Command:
+		make
+		make install
+
+	Note:
+		Successfully make and install the package
+
+	why did the renaming patch fix them:
+		Originally futimens had different arguments in h file and c file
+		The patch fixed it.
+
+	Command:
+		cd ..
+		cd coreutilsWithBugInstall
+		cd bin
+		cd pwd
+
+	Output:
+		/u/cs/ugrad/junhong/coreutilsWithBugInstall/bin
+		
+2. Reproduce bug
+
+	Command:
+		cd ~
+		tmp=$(mktemp -d)
+		cd $tmp
+		touch -d '1918-11-11 11:00 GMT' wwi-armistice
+		touch now
+		sleep 1
+		touch now1
+
+		TZ=UTC0 /u/cs/ugrad/junhong/coreutilsWithBugInstall/bin/ls -lt --full-time wwi-armistice now now1
+
+	Output:
+		-rw-r--r-- 1 junhong csugrad 0 1918-11-11 11:00:00.000000000 +0000 
+		wwi-armistice
+		-rw-r--r-- 1 junhong csugrad 0 2019-02-02 03:23:44.150609243 +0000 now1
+		-rw-r--r-- 1 junhong csugrad 0 2019-02-02 03:23:36.363394952 +0000 now
+		
+
+3. Debug the bug
+
+	Command:
+		cd ~
+		cd coreutils-with-bug
+		cd src
+		
+	Note:
+		go to the package src directory and find the bug
+
+	Command:
+		emacs ls.c
+		C-s sort
+		C-s
+		C-s
+		C-s
+		C-s sort_time
+		C-s
+		C-s
+		C-s
+		C-s
+		
+	Note:
+		something is wrong with compare_ctime, compare_mtime or compare_atime
+
+	Command:
+		C-x
+		C-c
+
+	Note:
+		exit emacs
+		
+	Command:
+		gdb ls
+	
+	Note:
+		open ls with debugger
+
+	Command:
+		break compare_ctime
+	
+	Note:
+		put break point at function compare_ctime
+
+	Command:
+		run -lt
+
+	Note:
+		check if compare_ctime is called with -lt option.
+		The program didn't stop. In other words,
+		compare_ctime was not called.
+
+	Command:
+		break compare_mtime
+
+	Note:
+		put break point at function compare_mtime
+
+	Command:
+		run -lt
+
+	Note:
+		check if compare_mtime is called with -lt option.
+		The program did stop before calling compare_mtime.
+
+	Command:
+		list
+		step
+		list
+		step
+		list
+
+	Output:
+		timespec_cmp (b=..., a=...) at ../lib/timespec.h:48
+
+		48	  int diff = a.tv_sec - b.tv_sec;
+
+		43	/* Return negative, zero, positive 
+			if A < B, A == B, A > B, respectively.
+		44	   Assume the nanosecond components are in range, 
+			or close to it.  */
+		45	static inline int
+		46	timespec_cmp (struct timespec a, struct timespec b)
+		47	{
+		48	  int diff = a.tv_sec - b.tv_sec;
+		49	  return diff ? diff : a.tv_nsec - b.tv_nsec;
+		50	}
+
+	Note:
+		It seems something is wrong with the comparator,
+		which is located at ../lib/timespec.h
+
+		If I used make CFLAGS='-g -O0'
+		all variables will be visible during debugging.
+
+	Command:
+		quit
+		y Enter
+
+	Note:
+		quit gdb
+
+4. Create Patch
+
+	Command:
+		cd ..
+		mkdir a
+
+	Command:
+		cp lib/timespec.h a/timespec.h
+		emacs lib/timespec.h
+	
+	Change Before:
+		int diff = a.tv_sec - b.tv_sec;
+		return diff ? diff : a.tv_nsec - b.tv_nsec;
+
+	Change After:
+		if (a.tv_sec == b.tv_sec) return a.tv_nsec - b.tv_nsec;
+  		return (a.tv_sec < b.tv_sec) ? -1 : 1;
+
+	Note:
+		The problem was because of overflow of diff
+
+	Command:
+		C-x C-c (exit emacs)
+		make
+  
+	Command:
+		cd src
+		pwd
+
+	Output:
+		/u/cs/ugrad/junhong/coreutils-with-bug/src
+
+	Command:
+		tmp=$(mktemp -d)
+		cd $tmp
+		touch -d '1918-11-11 11:00 GMT' wwi-armistice
+		touch now
+		sleep 1
+		touch now1
+
+	Command:
+		/u/cs/ugrad/junhong/coreutils-with-bug/src/ls -lt
+
+	Output:
+		total 0
+		-rw-r--r-- 1 junhong csugrad 0 2019-02-06 23:15 now1
+		-rw-r--r-- 1 junhong csugrad 0 2019-02-06 23:15 now
+		-rw-r--r-- 1 junhong csugrad 0 1918-11-11 03:00 wwi-armistice
+
+	Note:
+		Bug is fixed!
+
+	Command:
+		cd /u/cs/ugrad/junhong/coreutils-with-bug/
+		diff -u a/timespec.h lib/timespec.h > timespec.diff
+
+	Note:
+		create patch file
+
+	Command:
+		emacs
+		C-x 4 a
+	Note:
+		open change log
+
+	Content of change log:
+		* timespec.h (timespec_cmp):
+        	Fix issue where the date older than 1970 is not sorted correctly.
+        	Instead of using subtraction, which may cause an overflow,
+        	using direct comparison to prevent overflow.
+		
+	Command:
+		cat ChangeLog >> lab4.diff
+		cat timespec.diff >> lab4.diff
+		
+5. Reproduce the bug on SEASNet
+
+	Command:
+		cd ~
+		touch -d '1918-11-11 11:00 GMT' wwi-armistice
+		touch now
+		sleep 1
+		touch now1
+		TZ=UTC0 ls -lt --full-time wwi-armistice now now1
+
+	Output:
+		-rw-r--r-- 1 junhong csugrad 0 2054-12-17 17:28:16.000000000 +0000 wwi-armistice
+		-rw-r--r-- 1 junhong csugrad 0 2019-02-07 22:07:37.047885000 +0000 now1
+		-rw-r--r-- 1 junhong csugrad 0 2019-02-07 22:07:36.042793000 +0000 now
+
+	Note:
+		The sort itself is good, but the date of 
+		wwi-armistice doesn't seem to be right.
+		It should be 1918 but it becomes 2054.
+		touch is doing something weird.

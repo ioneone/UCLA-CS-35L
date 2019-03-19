@@ -1,0 +1,35 @@
+
+wget https://web.cs.ucla.edu/classes/winter19/cs35L/assign/dlskeleton.tgz
+tar -xvzf dlskeleton.tgz
+
+
+
+
+==============
+Static Linking
+==============
+gcc –c ctest1.c ctest2.c
+ar –cvr libctest.a ctest1.o ctest2.o
+ar –t libctest.a
+gcc –o first.out prog.c libctest.a
+
+===============
+Dynamic Linking
+===============
+gcc –Wall –fPIC –c ctest1.c ctest2.c
+gcc –shared –o libctest.so ctest1.o ctest2.o
+path=$PWD
+gcc –Wall prog.c –lctest –o first.out (should give error) 
+gcc –Wall –L $path –lctest –o first.out
+ldd first.out
+./first.out (If it does not execute, perform step
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$path 
+./first.out
+
+===============
+Dynamic Loading
+===============
+gcc -Wl,-rpath=$PWD randmain.c -o randmain
+gcc -Wl,-rpath=libhw.so,linsw.so randmain.c -o randmain
+
+

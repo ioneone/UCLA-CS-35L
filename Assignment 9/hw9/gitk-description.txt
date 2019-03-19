@@ -1,0 +1,25 @@
+=========================================================================================
+upper left sub window
+=========================================================================================
+This window shows commits, branches and their relationships with a nice diagram.
+It also shows the messages associated with each commit.
+
+=========================================================================================
+upper middle sub window
+=========================================================================================
+This window shows the author of corresponding commit from upper left sub window.
+
+=========================================================================================
+upper right sub window
+=========================================================================================
+This window shows the date and time of corresponding commit from upper left sub window.
+
+=========================================================================================
+bottom left sub window
+=========================================================================================
+This window shows the file changes of currently selected commit in diff format.
+
+=========================================================================================
+bottom right sub window
+=========================================================================================
+This window shows a list of files that were changed in currently selected commit.

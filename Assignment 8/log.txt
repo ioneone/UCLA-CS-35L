@@ -1,0 +1,355 @@
+=========================================================================================
+1. visit setup website
+=========================================================================================
+http://wiki.seeedstudio.com/BeagleBone_Green_Wireless/#step1-download-the-latest-
+software-image 
+
+=========================================================================================
+2. Go to "Update to latest software" section and follow the instructions to flush
+   the board to factory settings.
+=========================================================================================
+I went to Jeremy's office hours to flush the board
+
+=========================================================================================
+3. Connect Beaglebone to my computer
+=========================================================================================
+
+=========================================================================================
+4. Find BEAGLEBONE as an external storage device and open it.
+=========================================================================================
+
+=========================================================================================
+5. open START.htm to check how to get started.
+=========================================================================================
+
+=========================================================================================
+6. SSH into BeagleBone
+=========================================================================================
+--------
+Command
+--------
+ssh debian@beaglebone.local / ssh debian@192.168.6.2
+password: temppwd
+
+--------
+Note
+--------
+ssh to BeagleBone
+
+--------
+Command
+--------
+sudo su
+
+-------
+Note
+-------
+switch to root
+
+=========================================================================================
+7. After you successfully SSH into your BeagleBone, you should connect it to wifi. 
+   The tool we use for wifi connection management is "connmanctl". 
+   The steps to connect to wifi:
+=========================================================================================
+---------
+Command
+---------
+sudo connmanctl
+
+-------
+Note
+-------
+Start the connmanctl terminal
+
+---------
+Command
+---------
+enable wifi
+
+--------
+Note
+--------
+Turn on the wifi for your BeagleBone
+
+---------
+Command
+---------
+scan wifi
+
+--------
+Note
+--------
+Scan all available wifi access points
+
+-------
+Command
+-------
+services
+
+-------
+Note
+-------
+List all the discovered access points
+
+--------
+Command
+--------
+agent on
+
+--------
+Note
+--------
+Starting process required for wifi connection
+
+--------
+Command
+--------
+connect wifi_884aea622590_4352333736302d77696669_managed_psk
+
+-------
+Note
+-------
+connect to 3760ClassNet
+password:3760ClassNet
+
+=========================================================================================8 You should find the IP address of your BeagleBone by running "ifconfig". It is located 
+  under the network interface "wlan0" and labeled as "inet addr". Your teammate will use 
+  this IP address to SSH into your BeagleBone from his/her BeagleBone.
+=========================================================================================
+-------
+Command 
+-------
+ifconfig
+
+=========================================================================================
+9. After gaining Internet connection, you should first update the database of apt-get:
+=========================================================================================
+-------
+Command
+-------
+sudo apt-get update
+
+-------
+Note
+-------
+update
+
+-------
+Command
+-------
+sudo apt-get install xauth
+sudo apt-get install xvfb
+
+-------
+Note
+-------
+Install xauth and xvfb for X11 forwarding support for future SSH connections 
+to your BeagleBone
+
+
+=========================================================================================
+10. Some BeagleBones come with X11 disabled as a factory setting. Therefore, make sure 
+    that it is enabled before attempting the X11 forwarding part of the assignment. On 
+    both the server and client, check /etc/ssh/ssh_config and /etc/ssh/sshd_config files. 
+    Both can possibly disable X11 forwarding. Check for the line 'X11Forwarding no' and 
+    change it to 'X11Forwarding yes’. Additionally, make sure that ~/.ssh/config contains 
+    'ForwardAgent yes' and 'ForwardX11 yes' for the relevant hosts.sudo apt-get install 
+    xvfb
+    Also, you need to install an X11 client in your computer: XMing for Windows, XQuartz 
+    for Mac. Without these clients, you would not be able to see the X windows on your    
+    machine.
+=========================================================================================
+--------
+Command
+--------
+sudo apt-get install emacs
+
+--------
+Note
+--------
+install emacs
+
+
+--------
+Command
+--------
+sudo emacs /etc/ssh/ssh_config
+
+-------
+Note
+-------
+change ForwardAgent and ForwardX11 to yes
+
+=========================================================================================
+11. Install Firefox, which is a web browser with GUI support, in order to do the X11 
+    forwarding part of the assignment. Having Firefox will also make it possible to 
+    connect to access points like UCLA_WIFI, which require you to sign in with your 
+    credentials to gain Internet access. Run the following to install Firefox on your 
+    BeagleBone:
+=========================================================================================
+-------
+Command
+-------
+sudo apt-get install firefox-esr-l10n-en-gb
+sudo apt-get install xterm
+
+=========================================================================================
+Server Side
+=========================================================================================
+--------
+Command
+--------
+ssh-keygen
+
+--------
+Note
+--------
+Create public and private keys on server side.
+The client needs to store server's public key.
+Later on, client will use it for server authentication.
+
+--------
+Command
+--------
+sudo useradd -d /home/jun -m jun
+sudo passwd jun
+
+--------
+Note
+--------
+register an user "jun"
+
+--------
+Command
+--------
+cd /home/jun
+sudo mkdir .ssh
+
+--------
+Note
+---------
+store anything related to ssh command
+
+---------
+Command
+---------
+sudo chown -R jun .ssh
+
+--------
+Note
+--------
+change owner of .ssh to jun
+
+--------
+Command
+--------
+sudo chmod 700 .ssh
+
+-------
+Note
+--------
+allow read and write for owner but no read nor write for group and others
+
+-------
+Command
+--------
+ifconfig
+
+------
+Note
+-------
+Check server's IP address (it's under wlan0).
+Use lo if the device is offline.
+
+=========================================================================================
+Client Side
+
+I had two partners: 
+Jonathan Liau [uid: 105182103]
+Sum Yi Li [uid: 505146702]
+=========================================================================================
+-------
+Command
+-------
+ssh-keygen
+
+-------
+Note
+-------
+Generate public and private keys, this will ask for passphrase.
+A passphrase will be used to encrypt and decrypt the client's private key.
+
+-------
+Command
+-------
+ssh-copy-id -i jun@10.97.85.83
+
+-------
+Note
+-------
+Copy client's public key to server.
+
+-------
+Command
+-------
+ssh -X jun@10.97.85.83
+
+-------
+Note
+-------
+Login as jun, this will ask for the passphrase
+because it needs to use private key to respond to
+server's user authentication.
+
+-------
+Command
+-------
+eval `ssh-agent`
+
+-------
+Note
+-------
+`ssh-agent` returns a set of commands for remembering a passphrase.
+This will start the process and return the process id.
+
+-------
+Command 
+--------
+ssh-add
+
+------
+Note
+------
+type the passphrase.
+Let ssh-agent remember the passphrase
+so that we don't need to enter passphrase every time.
+
+-------
+Command
+-------
+ssh -X jun@10.97.85.83
+
+-------
+Note
+-------
+login as jun again. This will no longer ask for the passphrase
+
+
+=========================================================================================
+Check whether ssh -X and ssh -Y differ in behavior when you use port forwarding.
+=========================================================================================
+Not on seasnet server, but yes in general.
+-X is more secure for the server
+-Y is less secure for the server
+
+The local client can send a command to the remote server and receive graphical
+output. If the command violate some security settings, and -X is used,
+local client will receive an error. If -Y is used, it will bypass the security
+errors.
+
+
+
+
+
+
+

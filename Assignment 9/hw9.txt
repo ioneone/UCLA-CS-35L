@@ -1,0 +1,247 @@
+=========================================================================================
+1. Maintain a file hw9.txt that logs the actions you do in solving the homework. This is 
+   like your lab notebook lab9.txt, except it’s for the homework instead of the lab.
+=========================================================================================
+----------
+Command
+----------
+cd diffutils
+git checkout -b lab
+git statsh
+
+----------
+Note
+----------
+From the lab, my branch was in 'detached HEAD' state.
+Before leaving current branch and create a new branch,
+I first needed to save the changes I made in current branch
+
+I named my current branch as lab and stash the changes I made.
+
+=========================================================================================
+2. Check out version 3.0 of Diffutils from your repository, into a new branch named 
+   “quote”.
+=========================================================================================
+----------
+Command
+----------
+git checkout v3.0 -b quote
+
+
+=========================================================================================
+3. Install your change into this new branch, by running the patch command with your patch 
+   quote-3.0-patch.txt as input.
+=========================================================================================
+----------
+Command
+----------
+patch -p1 < ~/quote-3.0-patch.txt
+
+----------
+Output
+----------
+patching file src/cmp.c
+patching file src/diff.c
+patching file src/diff3.c
+patching file src/dir.c
+patching file src/sdiff.c
+patching file src/util.c
+
+=========================================================================================
+4. Learn how to use the Emacs function add-change-log-entry-other-window (C-x 4 a).
+=========================================================================================
+The Emacs command C-x 4 a adds a new entry to the change log file for the file 
+you are editing (add-change-log-entry-other-window).
+
+=========================================================================================
+5. Use this Emacs function to compose an appropriate ChangeLog entry for your patch, by 
+   adapting the change log from the original patch.
+=========================================================================================
+----------
+Command
+----------
+emacs
+C-x 4 a
+
+----------
+Note (I put this in ChangeLog)
+----------
+2019-03-14  Junhong Wang  <junhong@lnxsrv02.seas.ucla.edu>
+
+	maint: quote 'like this' or "like this", not `like this'
+
+	This is in response to a recent change in the GNU coding standards,
+	which now suggest quoting 'like this' or "like this", instead of
+	`like this' or ``like this''.
+	* src/dir.c, src/cmp.c:
+        Quote 'like this' or "like this" in commentary.
+	* src/util.c, src/sdiff.c, src/diff3.c, src/diff.c:
+        Quote 'like this' in output.
+
+=========================================================================================
+6. Commit your changes to the new branch, using the ChangeLog entry as the commit 
+   message.
+=========================================================================================
+----------
+Command
+----------
+git add .
+git commit -F ChangeLog
+
+----------
+Output
+----------
+[quote 7315558] 2019-03-14  Junhong Wang  <junhong@lnxsrv02.seas.ucla.edu>
+ Committer: Junhong Wang <junhong@lnxsrv02.seas.ucla.edu>
+Your name and email address were configured automatically based
+on your username and hostname. Please check that they are accurate.
+You can suppress this message by setting them explicitly:
+
+    git config --global user.name "Your Name"
+    git config --global user.email you@example.com
+
+After doing this, you may fix the identity used for this commit with:
+
+    git commit --amend --reset-author
+
+ 6 files changed, 43 insertions(+), 43 deletions(-)
+
+=========================================================================================
+7. Use the command “git format-patch” to generate a file formatted-patch.txt. This patch 
+   should work without having to fix things by hand afterwards.
+=========================================================================================
+----------
+Command
+----------
+git format-patch -1 --stdout > ~/formatted-patch.txt
+
+----------
+Note
+----------
+git format-patch 
+
+-1 flag tells git how many commits should be included in the patch
+
+=========================================================================================
+8. Your teaching assistant will assign you a partner, who will also generate a patch. 
+   Verify that your partner's patch works, by checking out version 3.0 again into a new 
+   temporary branch partner, applying the patch with the command “git am”, and building 
+   the resulting system, checking that it works with “make check”.
+=========================================================================================
+----------
+My Parter
+----------
+Name: Jui-Ting Hsu
+ID: 704792310
+
+----------
+Command
+----------
+git checkout v3.0 -b partner
+
+----------
+Command
+----------
+git am ~/renee-formatted-patch.txt
+
+----------
+Command
+----------
+./bootstrap
+./configure
+make
+make check
+
+----------
+Command
+----------
+./src/diff . -
+
+----------
+Output
+----------
+./src/diff: cannot compare '-' to a directory
+
+----------
+Command
+----------
+./src/diff --help
+
+Usage: ./src/diff [OPTION]... FILES
+Compare files line by line.
+
+  -i  --ignore-case  Ignore case differences in file contents.
+  --ignore-file-name-case  Ignore case when comparing file names.
+  --no-ignore-file-name-case  Consider case when comparing file names.
+...
+
+----------
+Note
+----------
+It is verified that my parter's patch works
+by running ./src/diff . -, and ./src/diff --help.
+` is indeed replaced with '.
+
+=========================================================================================
+9. Verify that your ChangeLog entry works, by running the command “make distdir” and 
+   inspecting the resulting diffutils*/ChangeLog file.
+=========================================================================================
+----------
+Command
+----------
+make distdir
+emacs diffutils-3.0.1-2c06/ChangeLog
+
+----------
+Note
+----------
+It is verified that change log entry works.
+
+=========================================================================================
+10. There is a copy of the GNU Emacs git repository's master branch on SEASnet in the 
+    directory ~eggert/src/gnu/emacs. Run the command gitk on it, and find the newest 
+    merge that is not newer than 2015-01-25. Take a screenshot gitk-screenshot.png of 
+    your view of the mergepoint, and in an ASCII text file gitk-description.txt briefly 
+    describe the roles of subwindows that you see in the screenshot.
+=========================================================================================
+----------
+Command
+----------
+ssh -X junhong@lnxsrv02.seas.ucla.edu
+cd ~eggert/src/gnu/emacs
+gitk
+
+----------
+Note
+----------
+gitk - The Git repository browser
+
+I scroll down the sub window on the top right.
+It seems 2015-01-24 17:11:31 is the newest merge that is not newer than 2015-01-25.
+The description of the screenshot is in gitk-description.txt.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

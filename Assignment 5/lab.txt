@@ -1,0 +1,198 @@
+1. tr2b.c
+* int main(int argc, char** argv) to read operands from shell
+
+* argc: number of operands
+
+* argv: operands
+
+* argv[0]: file name
+
+* use fprintf() to report the error to stderr
+
+* use strlen() to get the length of char*
+
+* although getchar() seems to get one char at a time,
+  internaly, it's getting chunks of chars to a buffer,
+  then returning one char at a time from the buffer.
+
+* #include <stdio.h> 
+  For using fprintf, getchar, stdin, etc.
+  
+* #include <string.h>
+  For using strlen
+
+* #include <stdlib.h>
+  For using exit
+
+2. tr2u.c
+* ssize_t read(int fildes, void* buf, size_t nbyte)
+  fildes : file descriptor
+  buf    : address of buffer to read into
+  nbyte  : maximum number of bytes to read
+	
+  return 0 if end of file
+  return -1 if error
+  return number of bytes read when successful
+
+* ssize_t write(int fildes, void* buf, size_t nbyte)
+  fildes : file descriptor
+  buf    : address of buffer to write into
+  nbyte  : maximum number of bytes to write
+  
+  return -1 if error
+  return 0 if end of file
+  return number of bytes written when successful 
+
+* replace getchar() with read()
+
+* replace putchar() with write()
+
+* #include <unistd.h>
+  For using read and write
+
+3. compare system calls
+
+	Command:
+		head --bytes=5000000 /dev/urandom > large.txt
+
+	Note:
+		create a file with at least 5,000,000 bytes
+
+	Command:
+		strace -c ./tr2b '?' 'a' < large.txt > tr2bStraceOut.txt
+
+	Output:
+		% time     seconds  usecs/call     calls    errors syscall
+		------ ----------- ----------- --------- --------- ----------------
+ 		62.78    0.000425           1       611           write
+ 		37.22    0.000252           0       613           read
+		 0.00    0.000000           0         2           open
+ 		 0.00    0.000000           0         2           close
+		 0.00    0.000000           0         4           fstat
+		 0.00    0.000000           0         9           mmap
+		 0.00    0.000000           0         4           mprotect
+		 0.00    0.000000           0         1           munmap
+		 0.00    0.000000           0         1           brk
+		 0.00    0.000000           0         1         1 access
+		 0.00    0.000000           0         1           execve
+		 0.00    0.000000           0         1           arch_prctl
+		------ ----------- ----------- --------- --------- ----------------
+		100.00    0.000677                  1250         1 total
+
+	Command:
+		strace -c ./tr2u '?' 'a' < large.txt > tr2uStraceOut.txt
+
+	Output:
+		% time     seconds  usecs/call     calls    errors syscall
+		------ ----------- ----------- --------- --------- ----------------
+		 54.76   20.890918           4   5000000           write
+		 45.24   17.259157           3   5000002           read
+		  0.00    0.000000           0         2           open
+		  0.00    0.000000           0         2           close
+		  0.00    0.000000           0         2           fstat
+		  0.00    0.000000           0         7           mmap
+		  0.00    0.000000           0         4           mprotect
+		  0.00    0.000000           0         1           munmap
+		  0.00    0.000000           0         1           brk
+		  0.00    0.000000           0         1         1 access
+		  0.00    0.000000           0         1           execve
+		  0.00    0.000000           0         1           arch_prctl
+		------ ----------- ----------- --------- --------- ----------------
+		100.00   38.150075              10000024         1 total
+
+	Command:
+		strace -c ./tr2b '?' 'a' < large.txt 
+		
+
+	Output:
+		time     seconds  usecs/call     calls    errors syscall
+		------ ----------- ----------- --------- --------- ----------------
+		 97.68    0.083495           4     19898           write
+		  2.18    0.001864           3       613           read
+		  0.05    0.000040           4         9           mmap
+		  0.04    0.000035           9         4           mprotect
+		  0.02    0.000014           4         4           fstat
+		  0.01    0.000011          11         1           munmap
+		  0.01    0.000009           5         2           open
+		  0.00    0.000004           2         2           close
+		  0.00    0.000004           4         1           arch_prctl
+		  0.00    0.000000           0         1           brk
+		  0.00    0.000000           0         1         1 access
+		  0.00    0.000000           0         1           execve
+		------ ----------- ----------- --------- --------- ----------------
+		100.00    0.085476                 20537         1 total
+
+	Command:
+		strace -c ./tr2u '?' 'a' < large.txt
+
+	Output:
+		time     seconds  usecs/call     calls    errors syscall
+		------ ----------- ----------- --------- --------- ----------------
+		 56.58   23.291646           5   5000000           write
+		 43.42   17.877215           4   5000002           read
+		  0.00    0.000021           5         4           mprotect
+		  0.00    0.000015           2         7           mmap
+		  0.00    0.000011          11         1           munmap
+		  0.00    0.000004           4         1           arch_prctl
+		  0.00    0.000000           0         2           open
+		  0.00    0.000000           0         2           close
+		  0.00    0.000000           0         2           fstat
+		  0.00    0.000000           0         1           brk
+		  0.00    0.000000           0         1         1 access
+		  0.00    0.000000           0         1           execve
+		------ ----------- ----------- --------- --------- ----------------
+		100.00   41.168912              10000024         1 total
+
+	Note:
+		strace -o filename command
+		Intercepts and prints out system calls to stderr or to an output file
+		
+		strace -o filename command > output.txt
+		store the output of the command to output.txt
+
+		It seems tr2b requires less system calls than tr2u.
+		In other words, buffered I/O requires less
+		system calls than unbuffered I/O.
+
+4. measure which program is faster
+
+	Command:
+		time ./tr2b '?' 'a' < large.txt > tr2bStraceOut.txt
+	Note:
+		time [options] command [arguments...]
+
+	Output:
+		real	0m0.319s
+		user	0m0.263s
+		sys	0m0.009s
+
+	Command:
+		time ./tr2u '?' 'a' < large.txt > tr2uStraceOut.txt
+
+	Output:
+		real	0m10.424s
+		user	0m1.292s
+		sys	0m9.087s
+
+	Command:
+		time ./tr2b '?' 'a' < large.txt
+
+	Output:
+		real	0m1.130s
+		user	0m0.307s
+		sys	0m0.097s
+
+	Command:
+		time ./tr2u '?' 'a' < large.txt
+
+	Output:
+		real	0m9.720s
+		user	0m1.405s
+		sys	0m8.305s
+
+	Note:
+		buffered program runs much faster than unbuffered one
+		real is elapsed time as read from a wall clock
+		user is the CPU time used by your process
+		sys is the CPU time used by the system on behalf of your process
+

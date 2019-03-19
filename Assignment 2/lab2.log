@@ -1,0 +1,466 @@
+Keep a log in the file lab2.log of what you do in the lab so that 
+you can reproduce the results later. This should not merely be a 
+transcript of what you typed: it should be more like a true lab notebook, 
+in which you briefly note down what you did and what happened.
+
+For this laboratory we assume you're in the standard C or POSIX locale.
+The shell command locale should output LC_CTYPE="C" or LC_CTYPE="POSIX". 
+If it doesn't, use the following shell command:
+export LC_ALL='C'
+and make sure locale outputs the right thing afterwards.
+
+	Command: 
+		locale
+	
+	Note:
+		Locale is a set of parameters that define a user's cultural preferences
+		such as language, country, and other area-specific things.
+
+	Output:
+		LANG=en_US.UTF-8
+		LC_CTYPE="en_US.UTF-8"
+		LC_NUMERIC="en_US.UTF-8"
+		LC_TIME="en_US.UTF-8"
+		LC_COLLATE="en_US.UTF-8"
+		LC_MONETARY="en_US.UTF-8"
+		LC_MESSAGES="en_US.UTF-8"
+		LC_PAPER="en_US.UTF-8"
+		LC_NAME="en_US.UTF-8"
+		LC_ADDRESS="en_US.UTF-8"
+		LC_TELEPHONE="en_US.UTF-8"
+		LC_MEASUREMENT="en_US.UTF-8"
+		LC_IDENTIFICATION="en_US.UTF-8"
+		LC_ALL=
+
+	Command: 
+		export LC_ALL='C'
+		export locale
+
+	Output:
+		LANG=en_US.UTF-8
+		LC_CTYPE="C"
+		LC_NUMERIC="C"
+		LC_TIME="C"
+		LC_COLLATE="C"
+		LC_MONETARY="C"
+		LC_MESSAGES="C"
+		LC_PAPER="C"
+		LC_NAME="C"
+		LC_ADDRESS="C"
+		LC_TELEPHONE="C"
+		LC_MEASUREMENT="C"
+		LC_IDENTIFICATION="C"
+		LC_ALL=C
+
+	Note:
+		C is the default locale
+
+
+We also assume the file words contains a sorted list of English words. 
+Create such a file by sorting the contents of the 
+file /usr/share/dict/words on the SEASnet GNU/Linux hosts, 
+and putting the result into a file named words in your working directory. 
+To do that, you can use the sort command.
+
+	Command:
+		sort -u /usr/share/dict/words > ./words
+		cat words
+
+	Output:
+		&c
+		'd
+		'em
+		'll
+		...
+		zythum
+		zyzzyva
+		zyzzyvas
+
+Then, take a text file containing the HTML in this assignment's web page.
+
+	Command: 
+		wget https://web.cs.ucla.edu/classes/winter19/cs35L/assign/assign2.html
+	
+	Note:
+		The command creates a file named assign2.html
+
+
+And run the following commands with that text file being standard input. 
+Describe generally what each command outputs 
+(in particular, how its output differs from that of the previous command), 
+and why.
+
+tr -c 'A-Za-z' '[\n*]'
+tr -cs 'A-Za-z' '[\n*]'
+tr -cs 'A-Za-z' '[\n*]' | sort
+tr -cs 'A-Za-z' '[\n*]' | sort -u
+tr -cs 'A-Za-z' '[\n*]' | sort -u | comm - words
+tr -cs 'A-Za-z' '[\n*]' | sort -u | comm -23 - words
+
+	Command:
+		man tr
+
+	Note:
+		Translate, squeeze, and/or delete characters from standard input, 
+		writing to standard output.
+
+	Command:
+		tr -c 'A-Za-z' '[\n*]' < assign2.html
+	
+	Output and Why:
+		The option -c means to use complement of 'A-Za-z'.
+		The command above replaces all the characters that are
+		not alphabets with new lines.
+		
+
+	Command:
+		tr -cs 'A-Za-z' '[\n*]' < assign2.html 
+
+	Output and Why:
+		The option -s means to only replace as a single occurrence
+		when the detected patterns are repeated. For instance,
+		it replaces a character with only one new line 
+		where it was replacing with two or three new lines.
+
+
+	Command: 
+		tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort
+	
+	Output and Why:
+		After replacing non-alphabet characters with new lines,
+		it sorts all the remaining words in alphabetical order.
+
+	Command: 
+		tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u
+
+	Output and Why:
+		The option -u makes sure the sorted words are unique.
+		For instance, it replaces
+	
+			apple
+			bear
+			bear
+			bear
+			bear
+			camera
+		with
+			apple
+			bear
+			camera
+
+	Command:
+		man comm
+
+	Note:
+		comm [OPTION] FILE1 FILE2
+		When FILE1 or FILE2 (not both) is -, read standard input.
+		With no options, produce three-column output.
+		-1: suppress column 1 (lines unique to FILE1)
+		-2: suppress column 2 (lines unique to FILE2)
+		-3: suppress column 3 (lines that appear in both files)
+	
+	Command:
+		tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm - words
+	
+	Output and Why:
+		Compare the words in assign2.html and words.
+		First column has words that is unique to assign2.html.
+		Second column has words that is unique to words.
+		Third column has words that appear in both files.
+
+	Command:
+		tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm -23 - words
+
+	Output and Why:
+		Compare the words in assign2.html and words.
+		Only show first column because of the
+		option -23.
+
+
+Let's take the last command as the crude implementation of 
+an English spelling checker. Suppose we want to change it to be 
+a spelling checker for Hawaiian, a language whose traditional orthography 
+has only the following letters (or their capitalized equivalents):
+
+p k ' m n w l h a e i o u
+
+In this lab for convenience we use ASCII apostrophe (') to represent 
+the Hawaiian 'okina ('); it has no capitalized equivalent.
+
+Create in the file hwords a simple Hawaiian dictionary 
+containing a copy of all the Hawaiian words in the tables 
+in "English to Hawaiian", an introductory list of words. 
+Use Wget to obtain your copy of that web page. 
+
+	Command:
+		wget http://mauimapp.com/moolelo/hwnwdseng.htm
+
+	Note:
+		The command fetches data from url and store it in hwnwdseng.htm
+
+Extract these words systematically from the tables in "English to Hawaiian". 
+Assume that each occurrence of "<tr> <td>Eword</td> <td>Hword</td>" contains
+a Hawaiian word in the Hword position. 
+
+1. Treat upper case letters as if they were lower case; 
+
+2. treat "<u>a</u>" as if it were "a", and similarly for other letters; 
+
+3. and treat ` (ASCII grave accent) as if it were ' 
+   (ASCII apostrophe, which we use to represent 'okina). 
+
+4. Some entries, for example "H<u>a</u>lau, kula", contain spaces or commas; 
+   treat them as multiple words (in this case, as "halau" and "kula"). 
+
+5. You may find that some of the entries are improperly formatted 
+   and contain English rather than Hawaiian; to fix this problem 
+   reject any entries that contain non-Hawaiian letters after the above 
+   mentioned substitutions are performed. 
+
+6. Sort the resulting list of words, removing any duplicates.
+
+Do not attempt to repair any remaining problems by hand; 
+just use the systematic rules mentioned above. Automate the systematic 
+rules into a shell script buildwords, which you should copy into your log; 
+it should read the HTML from standard input and write a sorted list of 
+unique words to standard output. For example, we should be able to run 
+this script with a command like this:
+
+cat foo.html bar.html | ./buildwords | less
+
+If the shell script has bugs and doesn't do all the work, 
+your log should record in detail each bug it has.
+
+	Command:
+		emacs buildwords.sh
+
+	Note:
+		A script is like a set of pre-written shell commands, 
+		which we can execute all at once.
+		ex) ./buildwords
+	
+	Content of buildwords:
+
+		#! /bin/bash
+
+		# select <td> tags
+		grep -o '<td>.*</td>' |
+
+		# remove all the tags   
+		sed 's/<[^>]*>//g' |
+
+		# squeeze new lines
+		tr -s '\n' |
+
+		# select even lines
+		sed -n '0~2p' |
+
+		# replace , with new line 
+		sed 's/,/\n/g' |
+
+		# replace a space with new line
+		sed 's/ /\n/g' |
+
+		# replace ` with ' 
+		sed "s/\`/\'/g" |
+
+		# translate uppercase into lowercase
+		tr '[:upper:]' '[:lower:]' |
+
+		# remove non-Hawaiian words
+		sed /[^pk\'mnwlhaeiou]/d |
+
+		# squeeze new lines
+		tr -s '\n' |
+
+		# sort with unique option
+		sort -u
+
+
+	Note:
+		grep [OPTIONS] PATTERNS will print lines that match patterns.
+		option -o will only print the matched parts.
+		
+		The first line of the script tells the OS what interpreter to use.
+		"#! /bin/bash" means to use bash shell to execute the script.
+
+		sed is used for filtering and transforming text.
+		sed [OPTION] {script} [input-file]
+
+		sed 's/[what we want to replace]/[what we want to replace it with]/'
+		will replace the input. s represents substitution. This will only
+		substitute the first occurrence.
+
+		sed 's/[before]/[after]/g' will replace all the occurrences.
+		g represents global.
+
+		& in sed means "the whole part of the input that was matched 
+		by the pattern". & is useful for pattern searching.
+		ex) sed -n 's/<td>/&/pg' will output all the occurrences of <td>
+
+		Alternatively, I could use
+
+			sed '/patternstart/,/patternstop/d'
+
+		to delete from patternstart to patternstop. This command works across
+		multiple lines.
+
+		sed -n '[first]~[step]p' will print every [step]'th line starting
+		with line [first]
+		ex) sed -n '1~2p' will match all the odd lines
+
+		tr -d [SET1] will delete characters in SET1
+		
+		[:blank:] matches space and tab characters
+		[:lower:] matches lowercase characters
+		[:upper:] matches uppercase characters
+
+		sed -n option prevents the outputs being echoed.q
+		The p flag will output lines where replacement was made.
+		ex) sed -n 's/[before]/[after]/p'
+
+		
+	Command:
+		C-x C-c y
+	
+	Note:
+		save file and exit emacs
+
+
+	Command:
+		chmod u+x buildwords.sh
+		cat hwnwdseng.htm | ./buildwords.sh > hwords
+		
+	
+Modify the last shell command shown above 
+(tr -cs 'A-Za-z' '[\n*]' | sort -u | comm -23 - words) 
+so that it checks the spelling of Hawaiian rather than English, 
+under the assumption that hwords is a Hawaiian dictionary. 
+Input that is upper case should be lower-cased 
+before it is checked against the dictionary, 
+since the dictionary is in all lower case.
+
+	Note:
+		tr -cs 'A-Za-z' '[\n*]' | sort -u | comm -23 - hwords
+
+		The command above first translate uppercase into lowercase,
+		then check it against hwords dictionary
+
+Check your work by running your Hawaiian spelling checker 
+on this web page (which you should also fetch with Wget)
+
+	Command:
+		wget https://web.cs.ucla.edu/classes/winter19/cs35L/assign/assign2.html
+
+	Command:
+		cat assign2.html | 
+		tr -cs 'A-Za-z' '[\n]' | 
+		tr '[:upper:]' '[:lower:]' |
+		sort -u | 
+		comm -23 - hwords > missspelledHawaiian.txt
+
+		cat missspelledHawaiian.txt
+
+	Output:
+		a
+		able
+		about
+		above
+		...	
+
+	Note:
+		Use tr -cs 'A-Za-z' '[\n*]' to remove non-alphabet characters
+		Use tr '[:upper:]' '[:lower:]' to transform uppercase to lowercase
+		Use sort -u to sort
+		Use comm -23 - words to only output words that don't exist
+		in the dictionary.
+
+And on the Hawaiian dictionary hwords itself.
+
+	Command:
+		cat hwords | 
+		tr -cs 'A-Za-z' '[\n*]' | 
+		tr '[:upper:]' '[:lower:]' |
+		sort -u | 
+		comm -23 - hwords 
+
+	Note:
+		No output		
+
+Count the number of "misspelled" English and Hawaiian words on this web page, 
+using your spelling checkers.
+
+	Command:
+		cat assign2.html | 
+		tr -cs 'A-Za-z' '[\n*]' |
+		tr '[:upper:]' '[:lower:]' |
+		sort -u | 
+		comm -23 - words > misspelledEnglish.txt
+
+		cat misspelledEnglish.txt
+	
+	Output:
+		basedefs
+		buildwords
+		charset
+		cmp
+		...
+	
+
+	Command:
+		cat misspelledEnglish.txt | wc -w
+
+	Output:
+		42 (misspelled English words)
+
+	Note:
+		Use wc -w to count the number of words that are not in the dictionary.
+
+	Command:
+		cat missspelledHawaiian.txt | wc -w
+
+	Output:
+		489 (misspelled Hawaiian words)
+
+Are there any words that are "misspelled" as English, 
+but not as Hawaiian? or "misspelled" as Hawaiian but not as English? 
+If so, give examples.
+
+	Command: 
+		comm -12 misspelledEnglish.txt hwords
+
+	Output:
+		halau
+		lau
+		wiki
+
+	Note:
+		Anything in third column appear in both file 1 and file 2.
+
+		"misspelled" as English, but not as Hawaiian examples are the follow.
+		halau
+		lau
+		wiki
+
+	Command: 
+		comm -12 misspelledHawaiian.txt words
+
+		comm -12 misspelledHawaiian.txt words | wc -w
+
+	Output:
+		a
+		able
+		above
+		abovementioned
+		accent
+		...
+		
+		450
+
+	Note:
+		"misspelled" as Hawaiian but not as English examples are the follow.
+		a
+		able
+		above
+		abovementioned
+		accent

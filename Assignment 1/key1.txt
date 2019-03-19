@@ -1,0 +1,309 @@
+Exercise 1.1: Moving around in Emacs
+
+1. Use Emacs to edit the file exer1.html.
+
+	Command used: emacs exer1.html
+
+2. Move the cursor to just after the first occurrence of the word "HTML" (all upper-case).
+	
+	Command used: C-s H T M L Enter
+	(C-s: search forward)
+
+3. Now move the cursor to the start of the first later occurrence of the word "scavenger".
+	
+	Command used: C-s s c a v e n g e r Enter M-b
+	(M-d: word move backward)
+
+4. Now move the cursor to the start of the first later occurrence of the word "self-referential".
+
+	Command used: C-s s e l f - r e f e r e n t i a l Enter M-b M-b
+
+5. Now move the cursor to the start of the first later occurrence of the word "arrow".
+
+	Command used: C-s a r r o w Enter M-b
+
+6. Now move the cursor to the end of the current line.
+
+	Command used: C-e
+
+7. Now move the cursor to the beginning of the current line.
+
+	Command used: C-a
+
+8. Doing the above tasks with the arrow keys takes many keystrokes, or it involves holding down keys for a long time. Can you think of a way to do it with fewer keystrokes by using some of the commands available in Emacs?
+
+	No. I did not use arrow keys. Commands are already provided above.
+
+9. Did you move the cursor using the arrow keys? If so, repeat the above steps, without using the arrow keys.
+
+	No
+
+10. When you are done, exit Emacs.
+
+	Command used: C-x C-c
+
+
+Exercise 1.2: Deleting text in Emacs
+
+1. Use Emacs to edit the file exer2.html. The idea is to delete its HTML comments; the resulting page should display the same text as the original.
+	
+	Command used: emacs exer2.html
+
+2. Delete the 18th line, which is an HTML comment. <!-- HTML comments look like this. -->
+
+	Command used: M-x goto-line 18 Enter C-k
+
+3. Delete the HTML comment containing the text "DELETE-ME DELETE-ME DELETE-ME".
+
+	Command used: C-s D E L E T E Enter C-a C-k
+
+4. Delete the HTML comment containing the text "https://en.wikipedia.org/wiki/HTML_comment#Comments".
+
+	Command used: C-s < ! Enter C-a C-@ down down down C-w
+
+5. There are three more HTML comments; delete them too.
+	
+	Command used 1: C-s < ! Enter C-b C-b M-z > 
+	(remove fourth comment)
+	(M-z char: kill through next occurence of char)
+
+	Command used 2: C-s < ! Enter C-a C-@ down down down down C-w 
+	(remove fifth comment)
+
+	Command used 3: C-s < ! Enter C-a C-k (remove sixth comment)
+
+Once again, try to accomplish the tasks using a small number of keystrokes. When you are done, save the file and exit back to the command line. You can check your work by using a browser to view exer2.html. 
+
+	Command used: C-x C-c y p (exit emacs and save file)
+
+Also, check that you haven't deleted something that you want to keep, by using the following command: diff -u exer1.html exer2.html >exer2.diff
+The output file exer2.diff should describe only text that you wanted to remove. Don't remove exer2.diff; you'll need it later.
+
+	Command used: diff -u exer1.html exer2.html > exer2.diff
+
+
+Exercise 1.3: Inserting text in Emacs
+
+1. Use Emacs to edit the file exer3.html.
+
+	Command used: emacs exer3.html
+
+2. Change the first two instances of "Assignment 1" to "Assignment 42".
+
+	Command used: 
+	M-% A s s i g n m e n t SP 1 Enter 
+	A s s i g n m e n t SP 4 2 Enter y y Enter
+
+3. Change the first instance of "UTF-8" to "US-ASCII".
+
+	Command used: M-< M-% U T F - 8 Enter U S - A S C I I Enter y Enter
+
+4. Ooops! The file is not ASCII so you need to fix that. Remove every line containing a non-ASCII character. You can find the next non-ASCII character by searching for the regular expression [^[:ascii:]].
+
+	Command used: M-< C-M-s [ ^ [ : a s c i i : ] ] Enter C-a C-k
+
+5. Insert an empty line after the first line containing "</ol>".
+
+	Command used: M-< C-s < / o l > Enter Enter
+
+6. When you finish, save the text file and exit Emacs. As before, use the diff command to check your work.
+
+	Command used 1: C-x C-c y (save file)
+
+	Command used 2: diff -u assign1.html exer3.html
+
+
+Exercise 1.4: Other editing tasks in Emacs
+In addition to inserting and deleting text, there are other common tasks that you should know, like copy and paste, search and replace, and undo.
+
+1. Execute the command "cat exer2.html exer2.diff >exer4.html" to create a file exer4.html that contains a copy of exer2.html followed by a copy of exer2.diff.
+
+	Command used: cat exer2.html exer2.diff > exer4.html
+
+2. Use Emacs to edit the file exer4.html. The idea is to edit the file so that it looks identical to exer1.html on a browser, but the file itself is a little bit different internally.
+
+	No need for command
+
+3. Go to the end of the file. Copy the new lines in the last chunk of diff output, and paste them into the correct location earlier in the file.
+
+	Command used: M-> C-r < Enter C-@ C-e M-w M-g g 3 9 8 Enter C-y
+	(C-r: search backward)
+	(M-w: copy)
+	(M-g g: go to line)
+	(Deleting the comment: <!-- end of HTML...)
+
+4. Repeat the process, until the earlier part of the file is identical to what was in the original.
+
+	Command used 1: 
+	M-g g 4 3 4 Enter C-f C-@ down down down C-e M-w 
+	M-g g 3 8 4 Enter C-y C-a C-d up C-d up C-d
+	(Deleting the comment: <!---<p>Or maybe...)
+
+	Command used 2: 
+	M-g g 4 3 6 Enter C-f C-@ C-e M-w 
+	M-g g 3 8 3 Enter C-y C-k 
+	(C-d: delete character forward)
+	(Deleting the comment: <!---->)
+
+	Command used 3: 
+	M-g g 4 2 6 Enter C-f C-@ down down C-e M-w 
+	M-g g 3 4 0 Enter C-y Enter up C-d up C-d
+	(Deleting the comment: <!-- You can...)
+
+	Command used 4: M-g g 4 2 0 Enter C-f C-@ C-e M-w M-g g 1 2 7 Enter C-y
+	(Deleting the comment: <!-- DELETE...)
+
+	Command used 5: M-g g 4 1 1 Enter C-f C-@ C-e M-w M-g g 1 8 Enter C-y
+	(Deleting the comment: <!-- diff, ...)
+
+5. Delete the last part of the file, which contains the diff output.
+	
+	Command used 1: M-g g 405 C-@ M-> Del
+	(Del: Delete Key)
+
+6. except we didn't really want to do that, so undo the deletion.
+	
+	Command used: C-x u
+
+7. Turn the diff output into a comment, by surrounding it with "<!--" and "-->".
+
+	Command used: M-g g 4 0 5 < ! - - M-> --> 
+
+8. Now let's try some search and replaces. Search the text document for the pattern "<ol>". How many instances did you find? Use the search and replace function to replace them all with the final-caps equivalent "<oL>".
+	
+	Command used: M-% < o l > Enter < o L > Enter ! 
+	Value returned: "Replaced 7 occurrences"
+
+9.Check your work with viewing exer4.html with an HTML browser, and by running the shell command "diff -u exer1.html exer4.html >exer4.diff". The only differences should be changes 
+from "<ol>" to "<oL>", and a long HTML comment at the end.
+
+	Command used 1: diff -u exer1.html exer4f.html > exer4.diff
+
+	Command used 2: emacs exer4.diff
+
+
+Exercise 1.5: Doing commands in Emacs
+Do these tasks all within Emacs. Don't use a shell subcommand if you can avoid it.
+
+1. Create a new directory named "junk" that's right under your home directory.
+
+	Command used 1: emacs
+
+	Command used 2: M-x m a k e - d i r e c t o r y Enter j u n k Enter 
+
+2. In that directory, create a C source file hello.c that contains the following text. Take care to get the text exactly right, with no trailing spaces or empty lines, with the initial # in the leftmost column of the first line, and with all other lines indented to match exactly as shown:
+#include <stdio.h>
+int
+main (void)
+{
+  char n = '\n', b = '\\', q = '"';
+  char const *p = "#include <stdio.h>%cint%cmain (void)%c{%c  char n = '%cn', b = '%c%c', q = '%c';%c  char const *p = %c%s%c;%c  printf (p, n, n, n, n, b, b, b, q, n, q, p, q, n, n, n, n);%c  return 0;%c}%c";
+  printf (p, n, n, n, n, b, b, b, q, n, q, p, q, n, n, n, n);
+  return 0;
+}
+
+	Command used 1: C-x C-f j u n k / h e l l o . c 
+	(C-x C-f: read a file into Emacs, if it doesn't exist, it creates one)
+
+	Then copy and paste the code above
+
+	Command used 2: C-x C-s
+	(C-x C-s: Save a file back to disk)
+
+3. Compile this file, using the Emacs M-x compile command.
+	
+	Command used 1: M-x c o m p i l e Enter
+
+	Command used 2: C-a C-k (Delete prepended command "make -k ")
+
+	Command used 3: g c c - o h e l l o SP h e l l o . c Enter
+
+4. Run the compiled program, and put its output into a new Emacs buffer named hello-out.
+	
+	Command used 1: C-x b h e l l o - o u t Enter
+	(C-x b: select or create a buffer)
+
+	Command used 2: C-u M-! . / h e l l o Enter
+	(C-u M-!: call shell command)
+	(./hello: execute a compiled program named "hello")
+
+5. Copy this buffer's contents directly into the log that you're maintaining for this exercise. (You are using Emacs to maintain the log, aren't you?)
+
+	#include <stdio.h>
+	int
+	main (void)
+	{
+  	  char n = '\n', b = '\\', q = '"';
+  	  char const *p = "#include <stdio.h>%cint%cmain (void)%c{%c  char n = '%cn', b = '%c%c\
+	  ', q = '%c';%c  char const *p = %c%s%c;%c  printf (p, n, n, n, n, b, b, b, q, n, q, p, \
+	  q, n, n, n, n);%c  return 0;%c}%c";
+  	  printf (p, n, n, n, n, b, b, b, q, n, q, p, q, n, n, n, n);
+  	  return 0;
+	}
+
+
+Exercise 1.6: Running Elisp code
+
+1. Visit Emacs's *scratch* buffer.
+
+	Command used: C-x b Enter
+
+2. In the buffer, seed the random number generator with your student ID as a string, dashes included. For example, if your student ID is 123-456-789, evaluate (random "123-456-789"). Use C-j (eval-print-last-sexp) to evaluate the expression, and record the result that you get.
+
+	Command used: ( r a n d o m SP " 5 0 4 - 9 4 1 - 1 1 3 " ) C-j
+	Value returned: -1336097086899157928
+
+3. In the buffer, assign two random integers to the global variables x and y. Start by executing (setq x (random)). Again, use C-j.
+
+	Command used 1: ( s e t q SP x SP ( r a n d o m ) ) C-j
+	Value returned: 1041097056844244652
+
+	Command used 2: ( s e t q SP y SP ( r a n d o m ) ) C-j
+	Value returned: 2233940217988299765
+
+4. What is the product of the two variables? You can find this out by evaluating (* x y). What do you observe about the result? If the answer is the correct mathematical answer, keep trying again with a different pair of random integers until you get an answer that is not mathematically correct.
+
+	Command used: (* SP x SP y) C-j
+	Value returned: -117185823459809636
+
+5. Try evaluating (* x y) again, but this time with M-: (eval-expression). What difference do you observe in the output?
+
+	Command used => M-: ( * SP x SP y ) Enter
+	Value Returned: -117185823459809636 (#o371375301651375663234, #x3e5fac1d4bf7669c)
+	Difference: It also outputs octal and hex versions of the result
+
+6. Are the two random integers truly random in the mathematical sense? If not, what's not random about them?
+
+	According to the Lisp documentation, The random numbers are generated 
+	with a pseudo-number generator, which approximates random sequence of numbers. 
+	Given any seed, the generator always generates the same sequence of numbers.
+
+7. Assuming (random) is truly random, what is the probability that the two-variable product mentioned above is mathematically incorrect? Explain how you calculated this.
+	
+	First of all, the multiplication of two random variables are incorrect 
+	when there is an overflow.
+	Assume that the range of values for an integer on emacs lisp is -2^29 to 2^29-1
+
+	Let X = int(2^a), Y = int(2^b) 
+	(the sign doesn't matter)
+	(a and b are technically any real numbers, 
+	but we can think of them as non-negative integers for computing probability)
+	X*Y does not overflow if a + b <= 29
+
+	Problem setting: Compute the probability that a + b > 29 where 0 <= a, b <= 29
+	Answer:
+
+	We will compute the probability a + b <= 29 first.
+
+	The valid combinations of (a, b) is:
+
+	(a, b)=(0, 0~29), (1, 0~28), all the way to (29, 0)
+
+	The number of valid pairs is 1+2+...+30=465
+	The total possible combination of (a,b) is 30*30=900
+
+	Therefore, the probability that multiplication of two random variables 
+	doesn't overflow is 465/900.
+
+	Thus the probability that two random variable product is 
+	mathematically incorrect is 1-(465/900), which is 435/900

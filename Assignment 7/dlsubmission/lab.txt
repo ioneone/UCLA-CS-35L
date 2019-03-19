@@ -1,0 +1,801 @@
+==================================================================================
+1. Compile, build and run a trivial program in C on the SEASnet GNU/Linux servers.
+==================================================================================
+
+--------
+Command
+--------
+emacs trivial.c
+
+----------------------
+Content of trivial.c
+----------------------
+#include <stdio.h>
+#include <math.h>
+
+int main() {
+    printf("%.17g\n", cos(sqrt(3.0)));
+    return 0;
+}
+
+==================================================================================
+2. Use the ldd command to see which dynamic libraries your trivial program uses.
+==================================================================================
+
+--------
+Command
+--------
+gcc -o trivial trivial.c -lm
+ldd ./trivial
+
+--------
+Output
+--------
+linux-vdso.so.1 =>  (0x00007ffe221cd000)
+libc.so.6 => /lib64/libc.so.6 (0x00007fdb63a9d000)
+/lib64/ld-linux-x86-64.so.2 (0x00007fdb63e6a000)
+
+--------
+Note
+--------
+ldd - print shared library dependencies
+.so files are shared libraries
+	
+The "vDSO" (virtual dynamic shared object) 
+is a small shared library that the kernel automatically 
+maps into the address space of all
+user-space applications.
+
+libc - overview of standard C libraries on Linux
+
+ld.so, ld-linux.so - dynamic linker/loader
+
+==================================================================================
+3. Use the strace command to see which system calls your trivial program makes.
+   Which of these calls are related to dynamic linking and 
+   what is the relationship?
+==================================================================================
+
+--------
+Command
+--------
+strace ./trivial
+
+--------
+Output
+--------
+execve("./trivial", ["./trivial"], [/* 36 vars */]) = 0
+brk(NULL)                               = 0x217a000
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, 
+MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f7b5743c000q
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=157948, ...}) = 0
+mmap(NULL, 157948, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f7b57415000
+close(3)                                = 0
+open("/lib64/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\340$\2\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=2151672, ...}) = 0
+mmap(NULL, 3981792, PROT_READ|PROT_EXEC, 
+MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f7b56e4f000
+mprotect(0x7f7b57011000, 2097152, PROT_NONE) = 0
+mmap(0x7f7b57211000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|
+MAP_FIXED|MAP_DENYWRITE, 3, 0x1c2000) = 0x7f7b57211000
+mmap(0x7f7b57217000, 16864, PROT_READ|PROT_WRITE, MAP_PRIVATE|
+MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7f7b57217000
+close(3)                                = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS,-1, 0) = 0x7f7b57414000
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS,-1, 0) = 0x7f7b57412000
+arch_prctl(ARCH_SET_FS, 0x7f7b57412740) = 0
+mprotect(0x7f7b57211000, 16384, PROT_READ) = 0
+mprotect(0x600000, 4096, PROT_READ)     = 0
+mprotect(0x7f7b5743d000, 4096, PROT_READ) = 0
+munmap(0x7f7b57415000, 157948)          = 0
+fstat(1, {st_mode=S_IFCHR|0620, st_rdev=makedev(136, 1), ...}) = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS,-1, 0) = 0x7f7b5743b000
+write(1, "-0.16055653857469052\n", 21-0.16055653857469052)  = 21
+exit_group(0)                           = ?
++++ exited with 0 +++
+
+---------------------------	
+Note (man 2 COMMAND_NAME)
+---------------------------
+execve       - execute program
+brk          - change data segment size
+mmap, munmap - map or unmap files or devices into memory
+mprotect     - set protection on a region of memory
+read         - read from a file descriptor
+write        - write to a file descriptor
+open         - open and possibly create a file or device
+close        - close a file descriptor
+fstat        - get file status
+access       - check real user's permissions for a file
+arch_prctl   - set architecture-specific thread state
+
+-------
+Note
+-------	
+It seems like access, open, fstat, mmap, close, read, 
+mprotect, munmap are related to dynamic linking
+
+access  : check user permission for /etc/ld.so.preload
+open    : open /etc/ld.so.cache
+fstat   : get information about .so files
+mmap    : map dynamic library functions to memory from disk
+close   : close .so files that were opened
+read    : read .so files that were opened
+mprotect: make sure the copy of the mapped functions are read only.
+	  Protect dynamic libraries from malicious programs.
+munmap  : memory unmapping
+
+==================================================================================
+4. get a list of two dozen or so commands to investigate.
+==================================================================================
+
+----------
+Command
+----------
+ls /usr/bin | awk 'NR%101==504941113%101'
+
+----------	
+Output
+----------
+appstream-compose
+cancel.cups
+complete-ant-cmd.pl
+db4-entities.pl
+dvd+rw-format
+file
+ghc-7.6.3
+growisofs
+gxl2gv
+imsettings-info
+k5srvutil
+kpsewhich
+libwacom-list-local-devices
+manpath
+ncurses5-config
+nspluginscan
+pamcut
+pax
+pg_dumpall
+pmfind
+po2wordfast
+ppmtotga
+rcsfreeze
+rpmkeys
+sha224sum
+strip
+texlua
+vacuumdb
+xfd
+yuvsplittoppm
+
+----------
+Note
+----------
+awk - pattern scanning and processing language
+NR - The total number of input records seen so far.
+
+==================================================================================
+5. Invoke ldd on each command in your list. 
+   If there are error messages, investigate why they're occurring.
+==================================================================================
+
+----------	
+Command
+----------
+cd /usr/bin
+ldd appstream-compose
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007fff4ff5d000)
+libappstream-glib.so.8 => /lib64/libappstream-glib.so.8 (0x00007f4eaa8fa000)
+libglib-2.0.so.0 => /lib64/libglib-2.0.so.0 (0x00007f4eaa5e4000)
+... (39 lines)
+
+----------	
+Command
+----------
+ldd cancel.cups
+
+	
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffd01d9e000)
+libmandb-2.6.3.so => /usr/lib64/man-db/libmandb-2.6.3.so (0x00007f2f4d9b0000)
+libman-2.6.3.so => /usr/lib64/man-db/libman-2.6.3.so (0x00007f2f4d790000)
+... (8 lines)
+
+----------
+Command
+----------
+ldd complete-ant-cmd.pl
+
+----------	
+Output
+----------
+not a dynamic executable
+
+----------
+Note
+----------
+ldd falls because complete-ant-cmd.pl is a perl script.
+
+----------
+Command
+----------
+ldd db4-entities.pl
+
+
+----------
+Output
+----------
+not a dynamic executable
+
+----------
+Note
+----------
+ldd falls because db4-entities.pl is a perl script.
+
+----------
+Command
+----------
+ldd dvd+rw-format
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffc233b7000)
+libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f8471b90000)
+libstdc++.so.6 => /lib64/libstdc++.so.6 (0x00007f8471889000)
+... (7 lines)
+
+----------
+Command
+----------
+ldd file
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffe4010e000)
+libmagic.so.1 => /usr/lib64/libmagic.so.1 (0x00007f87eccf3000)
+libz.so.1 => /usr/lib64/libz.so.1 (0x00007f87ecadd000)
+... (5 lines)
+
+----------
+Command
+----------
+ldd ghc-7.6.3
+
+----------
+Output
+----------
+not a dynamic executable
+
+----------
+Note
+----------
+ldd fails because ghc-7.6.3 is bash script
+
+----------
+Command
+----------
+ldd growisofs
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffeeef98000)
+libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f8bce4f2000)
+libstdc++.so.6 => /lib64/libstdc++.so.6 (0x00007f8bce1eb000)
+... (7 lines)
+
+----------
+Command
+----------
+ldd gxl2gv
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffd379fb000)
+libcgraph.so.6 => /lib64/libcgraph.so.6 (0x00007faa4ac7f000)
+libcdt.so.5 => /lib64/libcdt.so.5 (0x00007faa4aa78000)
+... (6 lines)
+
+----------
+Command
+----------
+ldd imsettings-info
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffef3ff6000)
+libimsettings.so.5 => /lib64/libimsettings.so.5 (0x00007fa422197000)
+libgio-2.0.so.0 => /lib64/libgio-2.0.so.0 (0x00007fa421df8000)
+... (19 lines)
+
+----------
+Command
+----------
+ldd k5srvutil
+
+
+----------
+Output
+----------
+not a dynamic executable
+
+---------
+Note
+----------
+ldd fails because k5srvutil is bash script
+
+----------
+Command
+----------
+ldd kpsewhich
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007fff8b9fb000)
+libkpathsea.so.6 => /lib64/libkpathsea.so.6 (0x00007fdbd28ee000)
+libc.so.6 => /lib64/libc.so.6 (0x00007fdbd2521000)
+... (4 lines)
+
+----------
+Command
+----------
+ldd libwacom-list-local-devices
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007fffca767000)
+libwacom.so.2 => /lib64/libwacom.so.2 (0x00007f7df96a8000)
+libgudev-1.0.so.0 => /lib64/libgudev-1.0.so.0 (0x00007f7df949d000)
+... (29 lines)
+
+----------
+Command
+----------
+ldd manpath
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffe2eff5000)
+libman-2.6.3.so => /usr/lib64/man-db/libman-2.6.3.so (0x00007ff1ddff8000)
+libc.so.6 => /lib64/libc.so.6 (0x00007ff1ddc2b000)
+... (6 lines)
+
+----------
+Command
+----------
+ldd ncurses5-config
+
+----------
+Output
+----------
+not a dynamic executable
+
+----------
+Note
+----------
+ldd fails because ncurses5-config is bash script.
+
+----------
+Command
+----------
+ldd nspluginscan
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffcc05f8000)
+libkio.so.5 => /lib64/libkio.so.5 (0x00007fd362c94000)
+libXt.so.6 => /lib64/libXt.so.6 (0x00007fd362a2d000)
+... (81 lines)
+
+----------
+Command
+----------
+ldd pamcut
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffc3b1fb000)
+libnetpbm.so.11 => /lib64/libnetpbm.so.11 (0x00007f8202d48000)
+libm.so.6 => /lib64/libm.so.6 (0x00007f8202a46000)
+... (5 lines)
+
+----------
+Command
+----------
+ldd pax
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffd5dcb5000)
+libc.so.6 => /lib64/libc.so.6 (0x00007f1936165000)
+/lib64/ld-linux-x86-64.so.2 (0x00007f1936532000)
+
+----------
+Command
+----------
+ldd pg_dumpall
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffeccb9b000)
+libpq.so.5 => /lib64/libpq.so.5 (0x00007f9d1ab72000)
+libc.so.6 => /lib64/libc.so.6 (0x00007f9d1a7a5000)
+... (31 lines)
+
+----------
+Command
+----------
+ldd pmfind
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffd34bc2000)
+libpcp.so.3 => /lib64/libpcp.so.3 (0x00007f94fdd98000)
+libc.so.6 => /lib64/libc.so.6 (0x00007f94fd9cb000)
+... (42 lines)
+
+----------
+Command
+----------
+ldd po2wordfast
+
+----------
+Output
+----------
+not a dynamic executable
+
+----------
+Note
+----------
+ldd fails because po2wordfast is python script
+
+----------
+Command
+----------
+ldd ppmtotga
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffcf03f0000)
+libnetpbm.so.11 => /lib64/libnetpbm.so.11 (0x00007f3ecbb99000)
+libm.so.6 => /lib64/libm.so.6 (0x00007f3ecb897000)
+... (5 lines)
+
+----------
+Command
+----------
+ldd rcsfreeze
+
+----------
+Output
+----------
+not a dynamic executable
+
+
+----------
+Note
+----------
+ldd fails because rcsfreeze is bash script
+
+----------
+Command
+----------
+ldd rpmkeys
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007fffc5380000)
+librpm.so.3 => /lib64/librpm.so.3 (0x00007f0fa4fce000)
+librpmio.so.3 => /lib64/librpmio.so.3 (0x00007f0fa4da1000)
+... (28 lines)
+
+----------
+Command
+----------
+ldd sha224sum
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffee55ac000)
+libcrypto.so.10 => /lib64/libcrypto.so.10 (0x00007f9098da8000)
+libc.so.6 => /lib64/libc.so.6 (0x00007f90989db000)
+... (6 lines)
+
+----------
+Command
+----------
+ldd strip
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffdd2534000)
+libbfd-2.27-34.base.el7.so => /lib64/libbfd-2.27-34.base.el7.so (0x00007f8a53045000)
+libdl.so.2 => /lib64/libdl.so.2 (0x00007f8a52e41000)
+... (5 lines)
+
+----------
+Command
+----------
+ldd texlua
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007fff6f17e000)
+libcairo.so.2 => /lib64/libcairo.so.2 (0x00007f7621f8f000)
+libpixman-1.so.0 => /lib64/libpixman-1.so.0 (0x00007f7621ce6000)
+... (37 lines)
+
+----------
+Command
+----------
+ldd vacuumdb
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffe3c6f3000)
+libpq.so.5 => /lib64/libpq.so.5 (0x00007f56bf5c7000)
+libc.so.6 => /lib64/libc.so.6 (0x00007f56bf1fa000)
+... (31 lines)
+
+----------
+Command
+----------
+ldd xfd
+
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffc335a0000)
+libXaw.so.7 => /lib64/libXaw.so.7 (0x00007ffbbe2f5000)
+libfontconfig.so.1 => /lib64/libfontconfig.so.1 (0x00007ffbbe0b3000)
+... (25 lines)
+
+
+----------
+Command
+----------
+ldd yuvsplittoppm
+
+
+----------
+Output
+----------
+linux-vdso.so.1 =>  (0x00007ffe7d53d000)
+libnetpbm.so.11 => /lib64/libnetpbm.so.11 (0x00007f96de4b8000)
+libm.so.6 => /lib64/libm.so.6 (0x00007f96de1b6000)
+... (5 lines)
+
+==================================================================================
+6. Get a sorted list of every dynamic library 
+   that is used by any of the commands on your list 
+   (omitting duplicates from your list).
+==================================================================================
+
+----------
+Command
+----------
+list=$( ls /usr/bin | awk 'NR%101==504941113%101' )
+for input in $list; do ldd /usr/bin/$input; done | grep ".so" | sed 's/(.*//g' | sort -u
+
+----------
+Output
+----------
+/lib64/ld-linux-x86-64.so.2 
+libacl.so.1 => /lib64/libacl.so.1 
+libappstream-glib.so.8 => /lib64/libappstream-glib.so.8 
+libarchive.so.13 => /lib64/libarchive.so.13 
+libattica.so.0.4 => /lib64/libattica.so.0.4 
+libattr.so.1 => /lib64/libattr.so.1 
+libaudit.so.1 => /lib64/libaudit.so.1 
+libavahi-client.so.3 => /lib64/libavahi-client.so.3 
+libavahi-common.so.3 => /lib64/libavahi-common.so.3 
+libbfd-2.27-34.base.el7.so => /lib64/libbfd-2.27-34.base.el7.so 
+libblkid.so.1 => /lib64/libblkid.so.1 
+libbz2.so.1 => /lib64/libbz2.so.1 
+libcairo.so.2 => /lib64/libcairo.so.2 
+libcap-ng.so.0 => /lib64/libcap-ng.so.0 
+libcap.so.2 => /lib64/libcap.so.2 
+libcdt.so.5 => /lib64/libcdt.so.5 
+libcgraph.so.6 => /lib64/libcgraph.so.6 
+libcom_err.so.2 => /lib64/libcom_err.so.2 
+libcrypto.so.10 => /lib64/libcrypto.so.10 
+libcrypt.so.1 => /lib64/libcrypt.so.1 
+libc.so.6 => /lib64/libc.so.6 
+libc.so.6 => /usr/lib64/libc.so.6 
+libcups.so.2 => /lib64/libcups.so.2 
+libdb-5.3.so => /lib64/libdb-5.3.so 
+libdbus-1.so.3 => /lib64/libdbus-1.so.3 
+libdbusmenu-qt.so.2 => /lib64/libdbusmenu-qt.so.2 
+libdl.so.2 => /lib64/libdl.so.2 
+libdw.so.1 => /lib64/libdw.so.1 
+libEGL.so.1 => /lib64/libEGL.so.1 
+libelf.so.1 => /lib64/libelf.so.1 
+libexpat.so.1 => /lib64/libexpat.so.1 
+libfam.so.0 => /lib64/libfam.so.0 
+libffi.so.6 => /lib64/libffi.so.6 
+libfontconfig.so.1 => /lib64/libfontconfig.so.1 
+libfreebl3.so => /lib64/libfreebl3.so 
+libfreetype.so.6 => /lib64/libfreetype.so.6 
+libgcab-1.0.so.0 => /lib64/libgcab-1.0.so.0 
+libgcc_s.so.1 => /lib64/libgcc_s.so.1 
+libgcrypt.so.11 => /lib64/libgcrypt.so.11 
+libgdk_pixbuf-2.0.so.0 => /lib64/libgdk_pixbuf-2.0.so.0 
+libgio-2.0.so.0 => /lib64/libgio-2.0.so.0 
+libGLdispatch.so.0 => /lib64/libGLdispatch.so.0 
+libglib-2.0.so.0 => /lib64/libglib-2.0.so.0 
+libGL.so.1 => /lib64/libGL.so.1 
+libGLX.so.0 => /lib64/libGLX.so.0 
+libgmodule-2.0.so.0 => /lib64/libgmodule-2.0.so.0 
+libgobject-2.0.so.0 => /lib64/libgobject-2.0.so.0 
+libgpg-error.so.0 => /lib64/libgpg-error.so.0 
+libgssapi_krb5.so.2 => /lib64/libgssapi_krb5.so.2 
+libgthread-2.0.so.0 => /lib64/libgthread-2.0.so.0 
+libgudev-1.0.so.0 => /lib64/libgudev-1.0.so.0 
+libICE.so.6 => /lib64/libICE.so.6 
+libimsettings.so.5 => /lib64/libimsettings.so.5 
+libjbig.so.2.0 => /lib64/libjbig.so.2.0 
+libjpeg.so.62 => /lib64/libjpeg.so.62 
+libk5crypto.so.3 => /lib64/libk5crypto.so.3 
+libkdecore.so.5 => /lib64/libkdecore.so.5 
+libkdeui.so.5 => /lib64/libkdeui.so.5 
+libkeyutils.so.1 => /lib64/libkeyutils.so.1 
+libkio.so.5 => /lib64/libkio.so.5 
+libkpathsea.so.6 => /lib64/libkpathsea.so.6 
+libkrb5.so.3 => /lib64/libkrb5.so.3 
+libkrb5support.so.0 => /lib64/libkrb5support.so.0 
+liblber-2.4.so.2 => /lib64/liblber-2.4.so.2 
+liblcms2.so.2 => /lib64/liblcms2.so.2 
+libldap_r-2.4.so.2 => /lib64/libldap_r-2.4.so.2 
+liblua-5.1.so => /lib64/liblua-5.1.so 
+liblz4.so.1 => /lib64/liblz4.so.1 
+liblzma.so.5 => /lib64/liblzma.so.5 
+liblzo2.so.2 => /lib64/liblzo2.so.2 
+libmagic.so.1 => /usr/lib64/libmagic.so.1 
+libman-2.6.3.so => /usr/lib64/man-db/libman-2.6.3.so 
+libmount.so.1 => /lib64/libmount.so.1 
+libm.so.6 => /lib64/libm.so.6 
+libnepomukquery.so.4 => /lib64/libnepomukquery.so.4 
+libnepomuk.so.4 => /lib64/libnepomuk.so.4 
+libnepomukutils.so.4 => /lib64/libnepomukutils.so.4 
+libnetpbm.so.11 => /lib64/libnetpbm.so.11 
+libnspr4.so => /lib64/libnspr4.so 
+libnss3.so => /lib64/libnss3.so 
+libnssutil3.so => /lib64/libnssutil3.so 
+libopenjpeg.so.1 => /lib64/libopenjpeg.so.1 
+libpcp.so.3 => /lib64/libpcp.so.3 
+libpcre.so.1 => /lib64/libpcre.so.1 
+libpipeline.so.1 => /lib64/libpipeline.so.1 
+libpixman-1.so.0 => /lib64/libpixman-1.so.0 
+libplc4.so => /lib64/libplc4.so 
+libplds4.so => /lib64/libplds4.so 
+libpng15.so.15 => /lib64/libpng15.so.15 
+libpoppler.so.46 => /lib64/libpoppler.so.46 
+libpopt.so.0 => /lib64/libpopt.so.0 
+libpq.so.5 => /lib64/libpq.so.5 
+libpthread.so.0 => /lib64/libpthread.so.0 
+libqca.so.2 => /lib64/libqca.so.2 
+libQtCore.so.4 => /lib64/libQtCore.so.4 
+libQtDBus.so.4 => /lib64/libQtDBus.so.4 
+libQtGui.so.4 => /lib64/libQtGui.so.4 
+libQtNetwork.so.4 => /lib64/libQtNetwork.so.4 
+libQtSvg.so.4 => /lib64/libQtSvg.so.4 
+libQtXml.so.4 => /lib64/libQtXml.so.4 
+libresolv.so.2 => /lib64/libresolv.so.2 
+librpmio.so.3 => /lib64/librpmio.so.3 
+librpm.so.3 => /lib64/librpm.so.3 
+librt.so.1 => /lib64/librt.so.1 
+libsasl2.so.3 => /lib64/libsasl2.so.3 
+libselinux.so.1 => /lib64/libselinux.so.1 
+libsmime3.so => /lib64/libsmime3.so 
+libSM.so.6 => /lib64/libSM.so.6 
+libsolid.so.4 => /lib64/libsolid.so.4 
+libsopranoclient.so.1 => /lib64/libsopranoclient.so.1 
+libsoprano.so.4 => /lib64/libsoprano.so.4 
+libsoup-2.4.so.1 => /lib64/libsoup-2.4.so.1 
+libsqlite3.so.0 => /lib64/libsqlite3.so.0 
+libssl3.so => /lib64/libssl3.so 
+libssl.so.10 => /lib64/libssl.so.10 
+libstdc++.so.6 => /lib64/libstdc++.so.6 
+libstreamanalyzer.so.0 => /lib64/libstreamanalyzer.so.0 
+libstreams.so.0 => /lib64/libstreams.so.0 
+libsystemd.so.0 => /lib64/libsystemd.so.0 
+libtiff.so.5 => /lib64/libtiff.so.5 
+libudev.so.1 => /lib64/libudev.so.1 
+libuuid.so.1 => /lib64/libuuid.so.1 
+libwacom.so.2 => /lib64/libwacom.so.2 
+libX11.so.6 => /lib64/libX11.so.6 
+libXau.so.6 => /lib64/libXau.so.6 
+libXaw.so.7 => /lib64/libXaw.so.7 
+libxcb-render.so.0 => /lib64/libxcb-render.so.0 
+libxcb-shm.so.0 => /lib64/libxcb-shm.so.0 
+libxcb.so.1 => /lib64/libxcb.so.1 
+libXcursor.so.1 => /lib64/libXcursor.so.1 
+libXext.so.6 => /lib64/libXext.so.6 
+libXfixes.so.3 => /lib64/libXfixes.so.3 
+libXft.so.2 => /lib64/libXft.so.2 
+libXinerama.so.1 => /lib64/libXinerama.so.1 
+libXi.so.6 => /lib64/libXi.so.6 
+libxml2.so.2 => /lib64/libxml2.so.2 
+libXmu.so.6 => /lib64/libXmu.so.6 
+libXpm.so.4 => /lib64/libXpm.so.4 
+libXrandr.so.2 => /lib64/libXrandr.so.2 
+libXrender.so.1 => /lib64/libXrender.so.1 
+libXt.so.6 => /lib64/libXt.so.6 
+libXtst.so.6 => /lib64/libXtst.so.6 
+libz.so.1 => /lib64/libz.so.1 
+libz.so.1 => /usr/lib64/libz.so.1 
+libzzip-0.so.13 => /lib64/libzzip-0.so.13 
+linux-vdso.so.1 => 
+
+----------
+Note
+----------
+store the list of commands in list variable with the following command:
+
+	list=$( ls /usr/bin | awk 'NR%101==504941113%101' )
+
+run ldd on each command in the list:
+
+	for input in $list; do ldd /usr/bin/$input; done
+
+pick lines that contain the keyword ".so":
+
+	grep ".so"
+
+remove the virtual memory addresses:
+
+	sed 's/(.*//g'
+
+sort it:
+
+	sort -u
+
+
+
+
+
+

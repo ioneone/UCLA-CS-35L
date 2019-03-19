@@ -1,0 +1,281 @@
+1. verify the signature of coreutils 8.29 with the GNU keystring
+
+	Command:
+		wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz.sig
+
+		wget https://ftp.gnu.org/gnu/gnu-keyring.gpg
+
+		gpg --verify --keyring 
+		/gnu-keyring.gpg coreutils-8.29.tar.xz.sig
+
+	Output:
+		gpg: directory `/u/cs/ugrad/junhong/.gnupg' created
+		gpg: new configuration file 
+		`/u/cs/ugrad/junhong/.gnupg/gpg.conf' created
+		gpg: WARNING: options in 
+		`/u/cs/ugrad/junhong/.gnupg/gpg.conf' 
+		are not yet active during this run
+		gpg: keyring `/u/cs/ugrad/junhong/.gnupg/pubring.gpg' created
+		gpg: Signature made Wed 27 Dec 2017 10:29:05 AM PST 
+		     using RSA key ID 306037D9
+		gpg: /u/cs/ugrad/junhong/.gnupg/trustdb.gpg: trustdb created
+		gpg: Good signature 
+		from "Pádraig Brady <P@draigBrady.com>"
+		gpg:                 aka "Pádraig Brady <pbrady@redhat.com>"
+		gpg:                 aka "Pádraig Brady <pixelbeat@gnu.org>"
+		gpg: WARNING: This key is not certified 
+		with a trusted signature!
+		gpg:          There is no indication 
+		that the signature belongs to the owner.
+		Primary key fingerprint:
+		6C37 DC12 121A 5006 BC1D  B804 DF6F D971 3060 37D9
+
+	Note:
+		The verification worked fine because of this line.
+
+			Good signature from 
+			"Pádraig Brady <P@draigBrady.com>"		
+
+		It is verified that the package was not tampered.
+
+		gnu-keyring.gpg contains the public key made by the
+		developer to decrypt the signature.
+
+		"A digital signature certifies and timestamps a document. 
+		If the document is subsequently modified in any way, 
+		a verification of the signature will fail. 
+		A digital signature can serve the same purpose as a 
+		hand-written signature with the additional benefit 
+		of being tamper-resistant."
+
+		A signature file is hashed with the original coreutil files.
+		If someone in the middle tampered the file,
+		it will change the hash algorithm of the signature file.
+		That's how we will know if the package was 
+		tampered by a middle person.
+
+		It says the it is not a trusted signature because the person
+		is not listed as a trusted developer in OS.
+		
+
+2. intall coreutils to coreutilsInstall
+
+	Command:
+		wget https://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz
+
+		tar -xJvf coreutils-8.29.tar.xz 
+
+	Note:
+		tar -xJvf to unzip the .tar.xz file
+
+	Command:
+		mkdir coreutilsInstall
+
+		cd coreutilsInstall
+
+		pwd
+
+	Output:
+		/u/cs/ugrad/junhong/coreutilsInstall
+
+	Note:
+		use pwd to check the absolute path of coreutilsInstall directory
+
+	Command:
+		cd ..
+
+		cd coreutils-8.29
+		
+	
+	Note:
+		specify the directory path for installing coreutils
+
+	Command:
+
+		./configure --prefix=/u/cs/ugrad/junhong/coreutilsInstall
+
+		make
+
+		make install
+
+	Note:
+		Install coreutils to coreutilsInstall
+
+
+3. reproduce the error
+
+	Command:
+		cd ..
+
+		cd coreutilsInstall
+
+		cd bin
+
+	Note:
+		go to ./coreutilsIntall/bin
+
+	Command:
+		man ls
+
+	Note:
+		ls -a option means all, 
+		and do not ignore entries starting with .
+		ls -A option means almost all, 
+		and do not list implied . and ..
+
+	Command:
+		./ls -a
+
+	Output:
+		.
+		..
+		'['
+		b2sum
+		base32
+		base64
+		basename
+		cat
+		
+	Note:
+		Only showing first few outputs here. 
+		It is verified that -a does not ignore entries starting with .
+		
+	Command:
+		./ls -A
+
+	Output:
+		'['
+		b2sum
+		base32
+		base64
+		basename
+		cat
+
+	Note:
+		Only showing first few outputs here
+		It is verified that -A does not list implied . and ..
+
+	Command:
+		./ls -Aa
+	
+	Output:
+		.
+		..
+		'['
+		b2sum
+		base32
+		base64
+		basename
+		cat
+
+	Note:
+		Only showing first few outputs here.
+		Using -a followed by -A seems okay.
+
+	Command:
+		./ls -aA
+
+	Output:
+		.
+		..
+		'['
+		b2sum
+		base32
+		base64
+		basename
+		cat
+
+	Note:
+		Only showing first few outputs here.
+		It seems -A option does NOT override -a option.
+		This is a bug!
+
+	
+4. Apply patch
+
+	Command:
+		cd ~
+
+		cd coreutils-8.29
+
+		emacs patch.diff
+
+	paste the follow to patch.diff:
+
+		--- a/src/ls.c
+		+++ b/src/ls.c
+		@@ -1903,8 +1903,7 @@ decode_switches (int argc, char **argv)
+           		break;
+ 
+         		case 'A':
+		-          if (ignore_mode == IGNORE_DEFAULT)
+		-            ignore_mode = IGNORE_DOT_AND_DOTDOT;
+		+          ignore_mode = IGNORE_DOT_AND_DOTDOT;
+		           break;
+ 
+		        case 'B':
+
+	Command:
+		X-x X-c y
+
+	Note:
+		exit emacs
+
+	Command:
+		patch -p1 < patch.diff
+
+	Output:
+		patching file src/ls.c
+		patch unexpectedly ends in middle of line
+		Hunk #1 succeeded at 1900 with fuzz 1 (offset -3 lines).
+
+	Note:
+		use patch to apply patch
+		-p[num] option to ignore up to [num]th directory
+		specified in the patch file
+
+	
+5. Type the command make
+
+	Command:
+		make
+
+	Note:
+		re-compile the change due to patch
+		make install is not used because 
+		it will install it into coreutilsInstall
+
+
+6. Check if bug is fixed
+
+	Command:
+		cd src
+
+	Note:
+		go to src directory where all the commands are stored
+
+	Command:
+		./ls -aA
+
+	Output:
+		'['
+		b2sum
+		base32
+
+	Note:
+		Only showing first few outputs.
+		It seems -A has successfully overridden -a option.
+
+	Command:
+		./ls -Aa
+
+	Output:
+		.
+		..
+		'['
+		b2sum
+		base32
+
+	Note:
+		Only showing first few outputs.
+		-Aa is same as -a option. Looks good.

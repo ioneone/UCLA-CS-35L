@@ -1,0 +1,155 @@
+=========================================================================================
+1. Suppose the other teams really had been observing all the bytes going across the 
+   network. Is your resulting network still secure? If so, explain why, and explain 
+   whether your answer would change if (1) you assumed the other teams had also tapped 
+   your keyboards after you completed all client-server setup and had thereby obtained 
+   your team's keystrokes during later operation, or (2) you are booting off USB and you 
+   assume the other teams temporarily had physical control of the USB. 
+   If not, explain any 
+   weaknesses of your team's setups, focusing on possible attacks by such outside 
+   observers.
+=========================================================================================
+-----------
+Assumption
+-----------
+The encryption and decryption of the communication is done with a symmetric key K,
+which is exchanged using asymmetric keys pairs (public key and private key).
+
+If asymmetric keys themselves are used for communication, then once the private key
+is compromised, the network will no longer be secure in a sense that person C
+can observe everything that's going on between the client and the server. 
+
+-----------------------------------------------------------
+(0) Person C is observing all the bytes going across the network
+-----------------------------------------------------------
+Well... if the communication is not encrypted, of course the network is not secured.
+However, usually the communication is encrypted, so the network should be secured.
+A key is needed to encrypt the communication. How to exchange this key securely?
+Here's how a client and a server establish a secure network.
+
+Step1: Server sends its public key to the user
+
+Step2: Client chooses a random symmetric key K, and encrypt it with server's public key.
+       (This key K will be used for encrypting and decrypting the communication)
+
+Step3: Client sends the encrypted key K to server.
+       (Person C can't see the encrypted key K because it doesn't know how to decrypt it.)
+
+Step4: Server decrypts the encrypted key K with its private key and gets K.
+
+Step5: Server and client can encrypt and decrypt communication with K.
+
+----------------------------------------------------------------------------------
+(1) Person C also tapped your keyboards after you completed all client-server setup
+----------------------------------------------------------------------------------
+Well... this depends on how user authentication is done, and the definition of
+secure network.
+
+-------------------------------
+Case1 - password authentication
+-------------------------------
+If the client is using password authentication, then person C can login in to the server
+pretending to be the user. The network is still secure in a sense that person C still
+doesn't know how to decrypt the communication. Person C knows your username and password 
+to ssh to the server. The network is not secure in a sense that person C can access
+everything you have as a user in the server. 
+
+---------------------------
+Case2 - key authentication
+---------------------------
+Here's how key authentication works.
+
+Step1: Server generates a random number N, 
+       encrypts it with the client's public key,
+       and sends it to the client.
+
+Step2: The client decrypts the message with its private key and sends N back to server.
+
+Step3: Server sees the client send back N, knows the client is actually the client.
+
+If the client is using key authentication, then the client will type the passphrase
+for its private key at some point when it ssh to the server. Although client's passphrase
+is compromised, person C still doesn't know how to decrypt the communication.
+Passphrase is just a password for decrypting the client's encrypted private key.
+And since person C doesn't have physical access to the client's device, it doesn't know
+what the encrypted private key is, and hence, doesn't know what the private key is.
+
+--------------------------------------------------------
+(2) Person C temporarily had physical control of the USB
+--------------------------------------------------------
+Well... this depends on if the client added non-empty passphrase for its private key,
+and if the client let ssh-agent to remember the passphrase.
+
+-------------------------------------------------------
+Case1 - The client did not set a passphrase for its private key
+-------------------------------------------------------
+Person C can just check what the private key is. 
+Now person C can pretend to be the client.
+The network is no longer secure in a sense that server could be communicating
+with person C while it thinks it's communicating with the client.
+
+------------------------------------------------------------------------------------
+Case2 - The client did set a passphrase, 
+        and didn't let ssh-agent to remember the passphrase
+------------------------------------------------------------------------------------
+Person C can't check client's private key because it's encrypted.
+And ssh to the server required the passphrase, person C won't be able to ssh the
+server. The network is still secured in a sense that person C still doesn't know
+how to decrypt the communication. But all the files the client has are compromised.
+
+------------------------------------------------------------------------------------
+Case3 - The client did set a passphrase, 
+        and did let ssh-agent to remember the passphrase
+------------------------------------------------------------------------------------
+Person C can also ssh to the server because ssh will not prompt to type passphrase.
+Although person C still doesn't know how to decrypt the communication, all the files
+of the client and the files of client's user on the server are compromised.
+
+
+=========================================================================================
+2. Explain why the gpg2 --verify command in the following instructions doesn't really 
+   verify that you personally created the file in question. How would you go about fixing 
+   this problem?
+=========================================================================================
+Okay, so here's how digital signature works.
+
+-------
+Sender
+-------
+Step1: Computes a hash value based on the content of the message you want to send.
+       This value is called message digest.
+
+Step2: Encrypts the message digest with sender's private key.
+       This generates sender's digital signature.
+
+Step3: Send the signature along with the messages (messages are unencrypted).
+
+--------
+Receiver
+--------
+Step1: get the public key of the sender
+
+Step2: Decrypt the digital signature with the key above to get hashed message.
+
+Step3: Re-compute the hash value of the messages.
+
+Step4: Check if hash value from Step2 matches hash value from Step3.
+       If they do, this means the messages are from the sender,
+       and they are not modified. Otherwise, the content of the messages
+       have been modified.
+
+
+So the reason digital signature verification doesn't really verify that you personally
+created the file in question is because it just verifies if the file is sent by
+someone with the sender's private key. Digital signature verification works under
+the assumption that sender's private key has not been compromised. If someone else
+also has sender's private key, they can pretend to be the sender.
+
+To go about fixing this problem, one reasonable solution I can think of is to directly
+contact the sender (maybe in person, by phone call, by email etc.), and ask if the
+sender actually sent the file in question. 
+
+
+
+
+

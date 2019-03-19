@@ -1,0 +1,27 @@
+Consider the Python script randline.py.
+
+	Command:
+		wget https://web.cs.ucla.edu/classes/winter19/cs35L/assign/randline.py
+
+	Note:
+		Output lines selected randomly from a file
+		python randline.py [OPTION] FILE
+
+Write a new script shuf.py in the style of randline.py; your script should implement the GNU shuf command that is part of GNU Coreutils. You should already have a copy of the shuf source code and documentation; look at the files you created in the laboratory. However, GNU shuf is written in C, whereas you want a Python implementation so that you can more easily add new features to it.
+
+Your program should support the following shuf options, with the same behavior as GNU shuf: 
+--input-range (-i), 1 - 2
+--head-count (-n), 
+--repeat (-r), 
+and --help.
+
+
+	Note:
+		-- means everything before is option and everything after is operand
+		argument "-" meaning standard input.
+
+As with GNU shuf, if --repeat (-r) is used without --head-count (-n), your program should run forever. Your program should also support zero non-option arguments or a single non-option argument "-" (either of which means read from standard input), or a single non-option argument other than "-" (which specifies the input file name). Your program need not support the other options of GNU shuf. As with GNU shuf, your program should report an error if given invalid arguments.
+
+Your shuf.py program should not import any modules other than argparse, string and the modules that randline.py already imports. Don't forget to change its usage message to accurately describe the modified behavior.
+
+Port your shuf.py implementation to Python 3. If you have trouble with optparse under Python 3, you can use the argparse module instead. Make sure that your shuf.py still works with Python 2. Don't rewrite it from scratch; make as few changes as is reasonable.

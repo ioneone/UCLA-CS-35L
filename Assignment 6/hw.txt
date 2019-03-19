@@ -1,0 +1,4 @@
+Command:
+	wget https://web.cs.ucla.edu/classes/winter19/cs35L/assign/srt.tgz
+	tar -xvzf srt.tgz 
+	

@@ -1,0 +1,182 @@
+0. code
+* strobu.c
+
+	if (input is a file) then
+		allocate enough memory and read the file
+	else
+		allocate memory byte by byte
+
+	** use getopt() to get options
+	** use struct stat to check the size of input file
+	** use S_ISREG to check if stdin is a file or not
+	** use (unsigned char) casting before passing into toupper()
+
+* strobs.sh
+
+	Command:
+		man tr
+
+	Note:
+		\NNN   character with octal value NNN (1 to 3 octal digits)
+
+		Basically we want to map from 0, 1, ... 255 to 0^42, 1^42, ... 255^42.
+		tr we recognize the number of char if it is in the form of \NNN
+		where NNN is octal.
+
+1. 
+Measure any differences in performance between 
+sfrob and sfrobu using the time command. 
+Run your program on inputs of varying numbers of input lines, 
+and estimate the number of comparisons 
+as a function of the number of input lines.
+
+	Note:
+		I created files of 10,000, 100,000, and 1,000,000 lines of words
+		where each line contains one word (one character followed by a space)
+		
+	Code (filename - words.c):
+		#include <time.h>
+		#include <stdlib.h>
+		#include <stdio.h>
+		int main(){
+		  srand(time(NULL));
+ 		  int i;
+		  for (i = 0; i < 10000; i++) {
+		    char r = 'A' + (rand() % 26);
+		    printf("%c \n", r);
+ 		  }
+ 		  return 0;
+		}
+
+	Command:
+		gcc -o words words.c
+		./words > rand10000.txt
+	
+	Note:
+		repeat the process above for 100000 
+		and 1000000 lines of texts.
+		
+		Now I have rand10000.txt, rand100000.txt, and rand1000000.txt
+
+	Command:
+		ls -lt rand10000*
+
+	Output:
+		-rw-r--r-- 1 junhong csugrad 3000000 Feb 16 16:57 rand1000000.txt
+		-rw-r--r-- 1 junhong csugrad  300000 Feb 16 16:56 rand100000.txt
+		-rw-r--r-- 1 junhong csugrad   30000 Feb 16 16:55 rand10000.txt
+
+	Command:
+		time ./sfrob < rand10000.txt
+
+	Output:
+		real	0m0.025s
+		user	0m0.010s
+		sys	0m0.014s
+
+	Command:
+		time ./sfrobu < rand10000.txt
+
+	Output:
+		real	0m0.040s
+		user	0m0.008s
+		sys	0m0.031s
+
+	Command:
+		time ./sfrob < rand100000.txt
+	
+	Output:
+		real	0m0.242s
+		user	0m0.102s
+		sys	0m0.135s
+
+	Command:
+		time ./sfrobu < rand100000.txt
+
+	Output:
+		real	0m0.395s
+		user	0m0.081s
+		sys	0m0.311s
+
+	Command:
+		time ./sfrob < rand1000000.txt
+	
+	Output:
+		real	0m2.538s
+		user	0m1.151s
+		sys	0m1.336s
+
+	Command:
+		time ./sfrobu < rand1000000.txt
+
+	Output:
+		real	0m3.821s
+		user	0m0.873s
+		sys	0m2.914s 
+
+	Note:
+		It seems sfrob runs faster than strobu in general.
+		
+		
+2. 
+Use the time command to compare the overall performance of 
+sfrob, sfrobu, sfrobs, sfrobu -f, and sfrobs -f.
+
+	Command:
+		time ./sfrob < large.txt > output.txt
+
+	Output:
+		real	0m0.550s
+		user	0m0.489s
+		sys	0m0.018s
+
+
+	Command:
+		time ./sfrobu < large.txt > largeOutput.txt
+
+	Output:
+		real	0m6.856s
+		user	0m0.761s
+		sys	0m6.051s
+
+	Command:
+		time ./sfrobs.sh < large.txt > largeOutput.txt
+
+	Output:
+		real	0m0.208s
+		user	0m0.031s
+		sys	0m0.026s
+
+	Command:
+		time ./sfrobu -f < large.txt > largeOutput.txt
+
+	Output:
+		real	0m6.696s
+		user	0m0.747s
+		sys	0m5.866s
+
+	Command:
+		time ./sfrobs.sh -f < large.txt > largeOutput.txt
+
+	Output:
+		real	0m0.122s
+		user	0m0.020s
+		sys	0m0.030s
+
+	Note:
+		Execution time:
+		sfrobs.sh -f << sfrobs.sh << ./sfrob << ./sfrobu -f << ./sfrobu
+
+		Observation 1: 
+		Shell script runs faster than C code
+
+		Observation 2:
+		-f option runs faster than no option.
+
+		Observation 3:
+		When reading a file, using getchar() runs faster than using read()
+			
+
+
+
+

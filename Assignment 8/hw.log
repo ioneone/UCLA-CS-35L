@@ -1,0 +1,26 @@
+gpg --gen-key
+
+[choose default key]
+
+[choose default size]
+
+[key does not expire]
+
+gpg --list-keys
+
+/u/cs/ugrad/junhong/.gnupg/pubring.gpg
+--------------------------------------
+pub   2048R/58CEC1E5 2019-03-07
+uid                  Junhong Wang (I'm a student at UCLA) <oneone@g.ucla.edu>
+sub   2048R/5CAB3DE9 2019-03-07
+
+gpg --armor --export > hw-pubkey.asc
+
+
+gpg --output eeprom.sig --sign eeprom
+
+gpg --output eeprom2 --decrypt eeprom.sig
+
+gpg --output eeprom.sig --detach-sig eeprom
+
+gpg --verify eeprom.sig eeprom

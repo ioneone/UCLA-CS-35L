@@ -1,0 +1,92 @@
+Q1. 
+Did the patch improve performance?
+
+	Answer:
+		The patch didn't really improved the performance of ls
+		because it just removed the if statement.
+		However, it fixed the bug.
+		-a option no longer always overrides -A option.
+		The option comes after will override previous ones.
+		For example, -aA is same as -A, -Aa is same as -a.
+
+
+Q2. 
+If your company adopts this patched version of Coreutils 
+instead of the default one, what else should you watch out for? 
+Might this new version of Coreutils introduce other problems 
+with your application?
+
+	Answer:
+		If the actual developers of Coreutils released 
+		its patch for newer version of Coreutils, 
+		the new patch might have conflict with
+		the patched version of Coreutils my company has. There will be
+		a conflict if the newer version modified 
+		the same files I modified.
+
+Q3. 
+What happens when this script is invoked 
+on an empty file like /dev/null, and why?
+
+	Command:
+		python randline.py /dev/null
+
+	Output:
+		Traceback (most recent call last):
+  		File "randline.py", line 70, in <module>
+		    main()
+		  File "randline.py", line 64, in main
+		    sys.stdout.write(generator.chooseline())
+		  File "randline.py", line 34, in chooseline
+		    return random.choice(self.lines)
+		  File "/usr/local/cs/Python-2.7.14/lib/python2.7/random.py", 
+		line 277, in choice
+		    return seq[int(self.random() * len(seq))]  
+		# raises IndexError if seq is empty
+		IndexError: list index out of range
+
+	What happens:
+		The program raises an error
+
+	Why:
+		When 
+			random.choice(self.lines) 
+
+		is called, the program crashes because self.lines is empty.
+		self.lines is empty because /dev/null is empty.
+		There is nothing to choose from empty lines.
+				
+		According to the documentation, 
+		random.choice(seq) raises an error
+		if seq is empty.
+
+		
+Q4. 
+What happens when this script is invoked with Python 3 
+rather than Python 2, and why? (You can run Python 3 on 
+the SEASnet hosts by using the command python3 instead of python.)
+
+	Command:
+		python3 randline.py buildwords.sh
+
+	Output:
+		File "randline.py", line 65
+    		except IOError as (errno, strerror):
+                      ^
+		SyntaxError: invalid syntax
+
+	What happens:
+		The program crashes due to syntax error.
+
+	Why:
+		In Python 2, exceptions like IOError are iterable.
+		However, this feature is removed in Python 3.
+		We need to do
+
+			except IOError as err:
+				errno, strerror = err
+
+		to unpack the exception in Python 3, which also
+		works in Python 2.
+
+		tuple unpacking on Error is no longer supported in Python 3.

@@ -1,0 +1,170 @@
+1. What shell command uses the man program to print all the commands that have a specific word in their man page (or at least the description part of the man page)? (hint: man man)
+
+	command used 1: man man
+	
+	command used 2: man -k
+
+	Explanation: 
+	man -k printf will show all the man pages 
+	that contains the word printf
+
+2. Where are the mv and sh programs located in the file system? List any shell commands you used to answer this question.
+
+	mv: /usr/bin/mv (Command used: which mv)
+	sh: /usr/bin/sh (Command used: which sh)
+
+3. What executable programs have names that are exactly two characters long and end in r, and what do they do? List any shell commands you used to answer this question.
+
+	$PATH: 
+	an environmental variable that specifies a set of directories 
+	where executable programs are located.
+
+	Command used: echo $PATH
+	Value returned => 
+	/usr/local/cs/bin:/usr/lib64/qt-3.3/bin:/u/cs/ugrad/junhong/perl5/bin:/usr/local/bin:/usr/bin:/usr/X11R6/bin:/usr/local/cs/bin:/u/cs/ugrad/junhong/binman
+
+	Command used: man find
+
+	Directory used: /usr/local/cs/bin
+
+	Command used: find /usr/local/cs/bin -executable -name ?r
+
+	Value returned: /usr/local/cs/bin/pr, /usr/local/cs/bin/tr
+	
+	pr: convert text files for printing (Command used: man pr)
+	tr: translate or delete characters (Command used: man tr)
+
+4. When you execute the command named by the symbolic link /usr/bin/emacs, which file actually is executed? List any shell commands you used to answer this question.
+
+	Command used: readlink -e /usr/bin/emacs
+	
+	file executed: /usr/bin/emacs-24.3
+
+5. What is the version number of the /usr/bin/gcc program? of the plain gcc program? Why are they different programs?
+
+	/usr/bin/gcc version: 4.8.5 (command used: /usr/bin/gcc --version)
+
+	gcc version: 8.2.0 (command used: gcc --version)
+
+6. The chmod program changes permissions on a file. What does the symbolic mode u+sx,o-w mean, in terms of permissions?
+
+	command used: man chmod
+
+	s: set user ID upon execution
+	x: execution permission
+	w: write permission
+	u+sx: add s, x to user
+	o-w: remove w from other
+
+7. Use the find command to find all directories modified in the last four weeks that are located under (or are the same as) the directory /usr/local/cs. List any shell commands you used to answer this question.
+
+	command used 1: man find
+
+	command used 2: find /usr/local/cs -type d -mtime -28 
+
+	value returned:
+	/usr/local/cs
+	/usr/local/cs/src/bison
+	/usr/local/cs/src/bison/RCS
+	/usr/local/cs/src/grep
+	/usr/local/cs/src/grep/RCS
+	/usr/local/cs/src/ocaml
+	/usr/local/cs/src/ocaml/RCS
+	/usr/local/cs/share/info
+	/usr/local/cs/share/man/man1
+	and so on 
+	(total: 309, command used: find /usr/local/cs -type d -mtime -28 | wc -l)
+
+8. Of the files in the same directory as find, how many of them are symbolic links? List any shell commands you used to answer this question.
+
+	Command used 1: which find
+
+	Command used 2: man find
+
+	Command used 3: find /usr/bin -type l
+
+	Command used 4: find /usr/bin -type l | wc -l
+
+	Value returned: 253
+
+9. What is the oldest regular file in the /usr/lib64 directory? Use the last-modified time to determine age. Specify the name of the file without the /usr/lib64/ prefix. Consider files whose names start with ".". List any shell commands you used to answer this question.
+
+	Command used 1: man ls
+
+	Command used 2: ls -a -l -t /usr/lib64
+	(-a: do not ignore entries starting with .)
+	(-t sort by modification time, newest first)
+
+	Last entry of values returned: 
+	-rwxr-xr-x.  1 root root       19408 Dec 28  2013 librom1394.so.0.3.0
+
+	Oldest regular file in /usr/lib64: librom1394.so.0.3.0
+
+
+10. Where does the locale command get its data from? List any shell commands you used to answer this question.
+
+	Command used: man localedef
+	Usual default path for compiled individual locale data files: /usr/lib/locale
+
+11. In Emacs, what commands have downcase in their name? List any Emacs commands you used to answer this question.
+
+	Command used: C-h a downcase
+
+	downcase-dwim (Command: M-x ... RET)
+	downcase-region (Command: C-x C-l)
+	downcase-word (Command: M-l)
+
+12. Briefly, what do the Emacs keystrokes C-M-r through C-M-v do? Can you list their actions concisely? List any Emacs commands you used to answer this question.
+
+	Command used: C-h k C-M-r
+	Do incremental search backward for regular expression
+
+	Command used: C-h k C-M-s
+	Do incremental search forward for regular expression.
+
+	Command used: C-h k C-M-t
+	Interchange sexps around point, moving forward one sexps.
+	
+	Command used: C-h k C-M-u
+	Move backward out of one level of parentheses.
+	
+	Command used: C-h k C-M-v
+	Scroll next window upward ARG lines; or near full screen if no ARG
+
+13. In more detail, what does the Emacs keystroke C-g do? List any Emacs commands you used to answer this question.
+
+	Command used: C-h k C-g
+	Signal a "quit" condition. In more detail, 
+	it cancels running or partially typed command.
+
+14. What does the Emacs yank function do, and how can you easily invoke it using keystrokes? List any Emacs commands you used to answer this question.
+
+	Command used 1: C-h f yank
+
+	Command used 2: C-h k C-y
+	
+	yank is same as paste.
+
+15. When looking at the directory /usr/bin, what's the difference between the output of the ls -l command, and the directory listing of the Emacs dired command? List any shell or Emacs commands you used to answer this question.
+
+	Emacs command used: C-x d backspace backspace /usr/bin
+
+	Value returned:
+	total used in directory 297928 available 13074856
+	dr-xr-xr-x. 2 root root    69632 Jan  3 13:15 .
+	drwxr-xr-x. 15 root root  4096 May 22  2018 ..
+	-rwxr-xr-x 1 root root    41544 Jun 15  2018 [
+	and so on
+
+	Bash command used: ls -l /usr/bin
+
+	Value returned:
+	total 297852
+	-rwxr-xr-x 1 root root    41544 Jun 15  2018 '['
+	-rwxr-xr-x 1 root root    107896 Jun 13  2018 a2p
+	-rwxr-xr-x 1 root root    52728 Jun 21  2018 ab
+
+	Difference:
+	The number of directories are different. Emacs shows more directories.
+	Emacs dired command provides additional information "available 13074856"
+	The order of files returned is also different.

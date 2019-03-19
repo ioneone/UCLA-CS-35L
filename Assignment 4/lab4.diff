@@ -1,0 +1,22 @@
+2019-02-09  Junhong Wang  <junhong@lnxsrv07.seas.ucla.edu>
+
+	* timespec.h (timespec_cmp):
+	Fix issue where the date older than 1970 is not sorted correctly.
+	Instead of using subtraction, which may cause an overflow,
+	using direct comparison to prevent overflow.
+
+--- a/timespec.h	2019-02-09 14:40:40.941201000 -0800
++++ lib/timespec.h	2019-02-09 14:43:16.187687000 -0800
+@@ -45,8 +45,10 @@
+ static inline int
+ timespec_cmp (struct timespec a, struct timespec b)
+ {
+-  int diff = a.tv_sec - b.tv_sec;
+-  return diff ? diff : a.tv_nsec - b.tv_nsec;
++  //int diff = a.tv_sec - b.tv_sec;
++  //return diff ? diff : a.tv_nsec - b.tv_nsec;
++  if (a.tv_sec == b.tv_sec) return a.tv_nsec - b.tv_nsec;
++  return (a.tv_sec < b.tv_sec) ? -1 : 1;
+ }
+ 
+ # if ! HAVE_DECL_NANOSLEEP
